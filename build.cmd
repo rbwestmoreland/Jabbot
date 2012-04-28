@@ -1,11 +1,11 @@
 @echo Off
 set config=%1
-if "%config%" == "" (
-   set config=debug
-)
+if "%config%" == "" (set config=debug)
 
 md artifacts
-md artifacts\bin
-md artifacts\packages
-%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild Jabbot.Console\Jabbot.Console.csproj /p:Configuration="%config%";OutputPath=..\artifacts\bin\;BuildPackage=false;PackageOutputDir=..\artifacts\packages /m /v:M /fl /flp:LogFile=artifacts\msbuild.log;Verbosity=Normal /nr:false
+md artifacts\console
+md artifacts\web
+
+%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild Jabbot.Console\Jabbot.Console.csproj /p:Configuration="%config%" /p:OutputPath=..\artifacts\console\ /flp:LogFile=artifacts\msbuild.console.log;Verbosity=Normal
+%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild Jabbot.Web\Jabbot.Web.csproj /p:Configuration="%config%" /p:OutDir=..\artifacts\web\ /flp:LogFile=artifacts\msbuild.web.log;Verbosity=Normal
 ::pause

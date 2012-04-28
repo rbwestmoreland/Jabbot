@@ -8,7 +8,7 @@ namespace Jabbot.Core.Sprockets
 {
     public static class Container
     {
-        private const string ExtensionsFolder = "Sprockets";
+        private const string ExtensionsFolder = "";//"Sprockets";
         private static CompositionContainer CompositionContainer { get; set; }
         public static IEnumerable<ISprocket> Sprockets { get; set; }
 
