@@ -1,0 +1,58 @@
+.text-right
+{
+    text-align: right;
+}
+
+.text-center
+{
+    text-align: center;
+}
+
+.text-left
+{
+    text-align: left;
+}
+
+.float-right
+{
+    float: right;
+}
+
+.float-left
+{
+    float: left;
+}
+
+p
+{
+    line-height: 2em;
+}
+
+.hero-unit 
+{
+    background-color: transparent;
+    padding: 30px;
+}
+
+.hero-unit h1
+{
+    font-size: 100px;
+    font-family: 'Lobster', inherit;
+}
+
+
+.hero-unit .btn-large
+{
+    font-size: 18px
+}
+
+.hero-unit .btn-large small
+{
+    font-size: 12px
+}
+
+#footer .logo-font
+{
+    font-family: 'Lobster', inherit;
+    font-size: 24px;
+}

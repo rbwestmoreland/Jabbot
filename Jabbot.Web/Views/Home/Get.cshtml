@@ -1,0 +1,107 @@
+﻿@model Jabbot.Web.Models.Home.HomeViewModel
+@{
+    ViewBag.Title = String.Format("Jabbot v{0}", Model.JabbotStatistics.Jabbot.Version);
+}
+
+<div class="row-fluid">
+    <div class="span2">
+        <h3 class="text-center">Status</h3>
+        <hr />
+        <p class="text-center">@if (Model.IsOnline()){<span class="status label label-success">online</span>}else{<span class="status label label-important">offline</span>}</p>
+        <p class="text-center">@if(!Model.IsOnline()){<small title="@Model.Status.LastSeen.ToString("MMM dd, yyyy") @@ @Model.Status.LastSeen.ToString("hh:mmtt") UTC">Last seen @Html.FormatTimeAgo(Model.Status.LastSeen, true)</small>}</p>
+    </div>
+    <div class="span8">
+        <div class="hero-unit text-center">
+            <h1>Jabbot</h1>
+            <br />
+            <p>
+                <a class="btn btn-large">View project on Github</a>
+                <a class="btn btn-inverse btn-large">Download Jabbot <small>@String.Format("v{0}", Model.JabbotStatistics.Jabbot.Version)</small></a>
+            </p>
+        </div>
+    </div>
+    <div class="span2">
+        <p>
+            <h3 class="text-center">Humans Served</h3>
+            <hr />
+            <p class="text-center"><small>today</small> @Html.FormatWithCommas(Model.JabbotStatistics.Statistics.TotalRequestsHandledThisDay)</p>
+            <p class="text-center"><small>this month</small> @Html.FormatWithCommas(Model.JabbotStatistics.Statistics.TotalRequestsHandledThisMonth)</p>
+            <p class="text-center"><small>lifetime</small> @Html.FormatWithCommas(Model.JabbotStatistics.Statistics.TotalRequestsHandledLifetime)</p>
+        </p>
+    </div>
+</div>
+
+<div id="about" class="row-fluid">
+    <div class="span12">
+        <div id="about-header" class="page-header">
+            <h2>
+                What is Jabbot?
+            </h2>
+        </div>
+        <div id="about" class="row-fluid">
+            <div class="span6">
+                <div id="what-is">
+                    <p>
+                        <strong>Jabbot is a JabbR robot.</strong> Not just any robot, but a customizable, 
+                        alcohol-powered robot. Invite him into your room to <em>impress</em> your friends 
+                        and colleagues. <em>It's really simple.</em>
+                    </p>
+                    <pre>/msg Jabbot join room ourkickassroom</pre>
+                </div>
+            </div>
+            <div class="span6">
+                <div id="what-can">
+                    <p>
+                        Once invited into your room, Jabbot listens, patiently, for your commands. Once heard, 
+                        Jabbot's Sprockets start spinning to <em>elate, thrill, and captivate</em> you. 
+                        He can even complete <em>boring, repetitive</em> tasks. Browse Jabbot's 
+                        <a href="#sprockets">pre-installed sprockets</a>, to see what he can do out 
+                        of the box. If you feel like crafting your own Sprocket, check-out Jabbot's 
+                        <a href="">extensibility manual</a>. <small>We still need one to that replies 
+                        <em>"That's what she said!"</em> just like any good friend would!</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="sprockets">
+
+    <div id="sprockets-header" class="page-header">
+        <h2>
+            Pre-Installed Sprockets 
+            <small><strong>sprock·et</strong> - a toothed wheel engaging with a conveyor or power chain.</small>
+        </h2>
+    </div>
+
+    <div id="sprockets-usage">
+    @for (int i = 0; i < Model.SprocketStatistics.Count(); i++)
+    {
+        var id = String.Format("sprocket-usage-{0}", i);
+        <h3>
+            <a href="#@id" data-toggle="collapse">@Model.SprocketStatistics.ElementAt(i).Sprocket.Name</a>
+            <small>@Model.SprocketStatistics.ElementAt(i).Sprocket.Description</small>
+        </h3>
+        <div class="collapse" id="@id">
+            @foreach (var usage in Model.SprocketStatistics.ElementAt(i).Sprocket.Usage)
+            {
+                <pre>@usage</pre>
+            }
+        </div>
+        <br />
+    }
+    </div>
+
+</div>
+
+@section JavaScript{
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(".collapse").collapse({
+            parent: $('#sprockets-usage'),
+            toggle: false
+        });
+    });
+</script>
+}
