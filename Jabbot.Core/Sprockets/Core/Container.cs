@@ -27,9 +27,10 @@ namespace Jabbot.Core.Sprockets
 
                 if (Directory.Exists(extensionsPath))
                 {
-                    catalog = new AggregateCatalog(
-                                new AssemblyCatalog(typeof(ISprocket).Assembly),
-                                new DirectoryCatalog(extensionsPath, "*.dll"));
+                    //catalog = new AggregateCatalog(
+                    //            new AssemblyCatalog(typeof(ISprocket).Assembly),
+                    //            new DirectoryCatalog(extensionsPath, "*.dll"));
+                    catalog = new AggregateCatalog(new DirectoryCatalog(extensionsPath, "*.dll"));
                 }
                 else
                 {
