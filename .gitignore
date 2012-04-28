@@ -108,5 +108,4 @@ UpgradeLog*.XML
 packages/
 
 #Custom
-.nuget/
 artifacts
