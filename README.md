@@ -8,7 +8,7 @@ About
 How to use Jabbot
 ---
 ####With JabbR.net
-* `/msg Jabbot join room ourkickassroom`
+* `/msg jabbot.apphb.com join room ourkickassroom`
 
 ####With your JabbR instance
 * Download
@@ -24,4 +24,4 @@ Licensed under the MIT License by [Bates Westmoreland](https://github.com/betoba
 
 Built with [SignalR](http://signalr.net), [JabbR](http://jabbr.net), and [Bootstrap](http://twitter.github.com/bootstrap). Icons from [Glyphicons Free](http://glyphicons.com).
 
-Hosted free by [AppHarbor](http://appharbor.com)
+Hosted free by [AppHarbor](http://appharbor.com) @ [http://jabbot.apphb.com](http://jabbot.apphb.com)
