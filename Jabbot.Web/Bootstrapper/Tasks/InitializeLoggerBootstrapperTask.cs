@@ -1,4 +1,6 @@
-﻿using NLog;
+﻿using System.Configuration;
+using Le;
+using NLog;
 using NLog.Config;
 using NLog.Targets;
 
@@ -8,22 +10,25 @@ namespace Jabbot.Web.Bootstrapper.Tasks
     {
         public void Execute()
         {
-            // Step 1. Create configuration object 
-            LoggingConfiguration config = new LoggingConfiguration();
+            string key = ConfigurationManager.AppSettings["LOGENTRIES_ACCOUNT_KEY"];
+            string location = ConfigurationManager.AppSettings["LOGENTRIES_LOCATION"];
 
-            // Step 2. Create targets and add them to the configuration 
-            ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget();
-            config.AddTarget("console", consoleTarget);
+            if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(location))
+            {
+                LoggingConfiguration config = new LoggingConfiguration();
 
-            // Step 3. Set target properties 
-            consoleTarget.Layout = "${date:format=HH\\:MM\\:ss} ${logger} ${message}";
+                LeTarget logEntiresTarget = new LeTarget();
+                config.AddTarget("logentries", logEntiresTarget);
+                logEntiresTarget.Key = key;
+                logEntiresTarget.Location = location;
+                logEntiresTarget.Debug = true;
+                logEntiresTarget.Layout = "${date:format=ddd MMM dd} ${time:format=HH:mm:ss} ${date:format=zzz yyyy} ${logger} : ${LEVEL}, ${message, ${exception:format=tostring}";
 
-            // Step 4. Define rules
-            LoggingRule rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
-            config.LoggingRules.Add(rule1);
+                LoggingRule rule = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
+                config.LoggingRules.Add(rule);
 
-            // Step 5. Activate the configuration
-            LogManager.Configuration = config;
+                LogManager.Configuration = config;
+            }
         }
     }
 }

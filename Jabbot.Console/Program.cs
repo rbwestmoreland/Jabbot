@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jabbot.Core.Jabbr;
 using Jabbot.Core.Sprockets;
+using Le;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -90,21 +91,31 @@ namespace Jabbot.Console
 
         private static void InitializeLogger()
         {
-            // Step 1. Create configuration object 
+            string key = ConfigurationManager.AppSettings["LOGENTRIES_ACCOUNT_KEY"];
+            string location = ConfigurationManager.AppSettings["LOGENTRIES_LOCATION"];
+
             LoggingConfiguration config = new LoggingConfiguration();
 
-            // Step 2. Create targets and add them to the configuration 
             ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget();
             config.AddTarget("console", consoleTarget);
-
-            // Step 3. Set target properties 
             consoleTarget.Layout = "${date:format=HH\\:MM\\:ss} ${logger} ${message}";
 
-            // Step 4. Define rules
             LoggingRule rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
             config.LoggingRules.Add(rule1);
 
-            // Step 5. Activate the configuration
+            if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(location))
+            {
+                LeTarget logEntiresTarget = new LeTarget();
+                config.AddTarget("logentries", logEntiresTarget);
+                logEntiresTarget.Key = key;
+                logEntiresTarget.Location = location;
+                logEntiresTarget.Debug = true;
+                logEntiresTarget.Layout = "${date:format=ddd MMM dd} ${time:format=HH:mm:ss} ${date:format=zzz yyyy} ${logger} : ${LEVEL}, ${message, ${exception:format=tostring}";
+
+                LoggingRule rule2 = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
+                config.LoggingRules.Add(rule2);
+            }
+
             LogManager.Configuration = config;
         }
 
