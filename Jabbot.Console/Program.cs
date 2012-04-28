@@ -110,7 +110,7 @@ namespace Jabbot.Console
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;
-                logEntiresTarget.Layout = "${date:format=ddd MMM dd} ${time:format=HH:mm:ss} ${date:format=zzz yyyy} ${logger} : ${LEVEL}, ${message, ${exception:format=tostring}";
+                logEntiresTarget.Layout = "${date:format=ddd MMM dd} ${time:format=HH:mm:ss} ${date:format=zzz yyyy} ${logger} : ${LEVEL}, ${message}, ${exception:format=tostring}";
 
                 LoggingRule rule2 = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
                 config.LoggingRules.Add(rule2);
