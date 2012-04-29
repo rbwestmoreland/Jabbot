@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Web;
+using NLog;
 
 namespace Jabbot.Web.Bootstrapper.Tasks
 {
     internal class OnExceptionBootstrapperTask : IBootstrapperPerInstanceTask
     {
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
+
         public void Execute(HttpApplication context)
         {
             context.Error += new EventHandler(context_Error);
@@ -18,7 +18,9 @@ namespace Jabbot.Web.Bootstrapper.Tasks
             if (sender is HttpApplication)
             {
                 var context = sender as HttpApplication;
-                var error = context.Server.GetLastError();
+                var exception = context.Server.GetLastError().GetBaseException();
+                Logger.ErrorException("An unhandled error has occured.", exception);
+                context.Server.ClearError();
             }
         }
     }
