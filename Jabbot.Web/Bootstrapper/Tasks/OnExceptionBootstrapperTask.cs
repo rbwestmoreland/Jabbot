@@ -19,7 +19,7 @@ namespace Jabbot.Web.Bootstrapper.Tasks
             {
                 var context = sender as HttpApplication;
                 var exception = context.Server.GetLastError().GetBaseException();
-                Logger.ErrorException("An unhandled error has occured.", exception);
+                Logger.ErrorException("An unhandled exception has occured.", exception);
                 context.Server.ClearError();
             }
         }
