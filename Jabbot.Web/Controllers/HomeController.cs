@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Configuration;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Web.Mvc;
@@ -17,27 +17,94 @@ namespace Jabbot.Web.Controllers
     public class HomeController : Controller
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private IRedisClient RedisClient { get; set; }
+
+        public HomeController(IRedisClient redisClient)
+        {
+            if (redisClient == null)
+            {
+                throw new ArgumentNullException("redisClient");
+            }
+
+            RedisClient = redisClient;
+        }
 
         public ActionResult Get()
         {
-            var version = Assembly.GetAssembly(typeof(ISprocket)).GetName().Version.ToString();
-
-            var jabbot = new JabbotViewModel(version);
-            var jabbotStatistics = GetStatisticsViewModel();
-            var jabbotStatisticsViewModel = new JabbotStatisticsViewModel(jabbot, jabbotStatistics);
-
-            var sprockets = Container.Sprockets.Select(s => new SprocketViewModel(s.Name, s.Description, s.Usage)).OrderBy(s => s.Name);
-            var sprocketStatisticsViewModel = sprockets.Select((SprocketViewModel s) =>
-            {
-                var statistics = StatisticsViewModel.Default;
-                return new SprocketStatisticsViewModel(s, statistics);
-            });
-
+            var jabbotStatisticsViewModel = GetJabbotStatisticsViewModel();
+            var sprocketStatisticsViewModel = GetSprocketStatisticsViewModel();
             var statusViewModel = GetStatusViewModel();
 
             var model = new HomeViewModel(jabbotStatisticsViewModel, sprocketStatisticsViewModel, statusViewModel);
 
             return View(model);
+        }
+
+        private JabbotStatisticsViewModel GetJabbotStatisticsViewModel()
+        {
+            var jabbotStatisticsViewModel = JabbotStatisticsViewModel.Default;
+
+            try
+            {
+                var version = Assembly.GetAssembly(typeof(ISprocket)).GetName().Version.ToString();
+                var jabbot = new JabbotViewModel(version);
+                var jabbotStatistics = GetStatisticsViewModel();
+
+                jabbotStatisticsViewModel = new JabbotStatisticsViewModel(jabbot, jabbotStatistics);
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorException("An error occured while populating the JabbotStatisticsViewModel.", ex);
+            }
+
+            return jabbotStatisticsViewModel;
+        }
+
+        private StatisticsViewModel GetStatisticsViewModel()
+        {
+            var viewModel = StatisticsViewModel.Default;
+
+            try
+            {
+                var allTimeHashValues = RedisClient.GetHashValues("Jabbot:Statistics:Sprockets:Usage:AllTime");
+                var yearlyHashValues = RedisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", DateTimeOffset.UtcNow));
+                var monthlyHashValues = RedisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", DateTimeOffset.UtcNow));
+                var dailyHashValues = RedisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", DateTimeOffset.UtcNow));
+
+                var allTimeSum = (from hv in allTimeHashValues select Int64.Parse(hv)).Sum();
+                var yearlySum = (from hv in yearlyHashValues select Int64.Parse(hv)).Sum();
+                var monthlySum = (from hv in monthlyHashValues select Int64.Parse(hv)).Sum();
+                var dailySum = (from hv in dailyHashValues select Int64.Parse(hv)).Sum();
+
+                viewModel = new StatisticsViewModel(allTimeSum, dailySum, monthlySum);
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorException("An error occured while populating the StatisticsViewModel.", ex);
+            }
+
+            return viewModel;
+        }
+
+        private IEnumerable<SprocketStatisticsViewModel> GetSprocketStatisticsViewModel()
+        {
+            IEnumerable<SprocketStatisticsViewModel> sprocketStatisticsViewModel = new List<SprocketStatisticsViewModel>();
+
+            try
+            {
+                var sprockets = Container.Sprockets.Select(s => new SprocketViewModel(s.Name, s.Description, s.Usage)).OrderBy(s => s.Name);
+                sprocketStatisticsViewModel = sprockets.Select((SprocketViewModel s) =>
+                {
+                    var statistics = StatisticsViewModel.Default;
+                    return new SprocketStatisticsViewModel(s, statistics);
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorException("An error occured while populating the SprocketStatisticsViewModel collection.", ex);
+            }
+
+            return sprocketStatisticsViewModel;
         }
 
         private StatusViewModel GetStatusViewModel()
@@ -46,13 +113,9 @@ namespace Jabbot.Web.Controllers
 
             try
             {
-                var uri = new Uri(ConfigurationManager.AppSettings["REDISTOGO_URL"]);
-                using (var redisClient = new RedisClient(uri))
-                {
-                    var dateTimeOffsetString = redisClient.Get<string>("Jabbot:LastSeen");
-                    var lastSeen = DateTimeOffset.Parse(dateTimeOffsetString);
-                    viewModel = new StatusViewModel(lastSeen);
-                }
+                var dateTimeOffsetString = RedisClient.Get<string>("Jabbot:LastSeen");
+                var lastSeen = DateTimeOffset.Parse(dateTimeOffsetString);
+                viewModel = new StatusViewModel(lastSeen);
             }
             catch(Exception ex)
             {
@@ -62,34 +125,29 @@ namespace Jabbot.Web.Controllers
             return viewModel;
         }
 
-        private StatisticsViewModel GetStatisticsViewModel()
+        #region IDisposable Member(s)
+
+        private bool Disposed { get; set; }
+
+        protected override void Dispose(bool disposing)
         {
-            var viewModel = StatisticsViewModel.Default;
-
-            try
+            if (!this.Disposed)
             {
-                var uri = new Uri(ConfigurationManager.AppSettings["REDISTOGO_URL"]);
-                using (var redisClient = new RedisClient(uri))
+                try
                 {
-                    var allTimeHashValues = redisClient.GetHashValues("Jabbot:Statistics:Sprockets:Usage:AllTime");
-                    var yearlyHashValues = redisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", DateTimeOffset.UtcNow));
-                    var monthlyHashValues = redisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", DateTimeOffset.UtcNow));
-                    var dailyHashValues = redisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", DateTimeOffset.UtcNow));
-
-                    var allTimeSum = (from hv in allTimeHashValues select Int64.Parse(hv)).Sum();
-                    var yearlySum = (from hv in yearlyHashValues select Int64.Parse(hv)).Sum();
-                    var monthlySum = (from hv in monthlyHashValues select Int64.Parse(hv)).Sum();
-                    var dailySum = (from hv in dailyHashValues select Int64.Parse(hv)).Sum();
-
-                    viewModel = new StatisticsViewModel(allTimeSum, dailySum, monthlySum);
+                    if (disposing)
+                    {
+                        RedisClient.Dispose();
+                    }
+                    this.Disposed = true;
+                }
+                finally
+                {
+                    base.Dispose(disposing);
                 }
             }
-            catch (Exception ex)
-            {
-                Logger.ErrorException("An error occured while populating the StatisticsViewModel.", ex);
-            }
-
-            return viewModel;
         }
+
+        #endregion IDisposable Member(s)
     }
 }
