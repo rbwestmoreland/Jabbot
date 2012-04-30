@@ -113,9 +113,13 @@ namespace Jabbot.Web.Controllers
 
             try
             {
-                var dateTimeOffsetString = RedisClient.Get<string>("Jabbot:LastSeen");
-                var lastSeen = DateTimeOffset.Parse(dateTimeOffsetString);
-                viewModel = new StatusViewModel(lastSeen);
+                var redisKey = "Jabbot:LastSeen";
+                if (RedisClient.ContainsKey(redisKey))
+                {
+                    var dateTimeOffsetString = RedisClient.Get<string>(redisKey);
+                    var lastSeen = DateTimeOffset.Parse(dateTimeOffsetString);
+                    viewModel = new StatusViewModel(lastSeen);
+                }
             }
             catch(Exception ex)
             {
