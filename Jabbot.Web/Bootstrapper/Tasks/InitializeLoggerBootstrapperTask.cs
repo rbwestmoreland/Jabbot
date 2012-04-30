@@ -15,19 +15,19 @@ namespace Jabbot.Web.Bootstrapper.Tasks
 
             if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(location))
             {
-                LoggingConfiguration config = new LoggingConfiguration();
+                var loggingConfiguration = new LoggingConfiguration();
 
-                LeTarget logEntiresTarget = new LeTarget();
-                config.AddTarget("logentries", logEntiresTarget);
+                var logEntiresTarget = new LeTarget();
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;
-                logEntiresTarget.Layout = "${date:format=ddd MMM dd} ${time:format=HH:mm:ss} ${date:format=zzz yyyy} ${logger} : ${LEVEL}, ${message}, ${exception:format=tostring}";
+                logEntiresTarget.Layout = "${date:format=u} ${level} ${message}: ${exception:format=tostring}";
+                loggingConfiguration.AddTarget("logentries", logEntiresTarget);
 
-                LoggingRule rule = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
-                config.LoggingRules.Add(rule);
+                var loggingRule = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
+                loggingConfiguration.LoggingRules.Add(loggingRule);
 
-                LogManager.Configuration = config;
+                LogManager.Configuration = loggingConfiguration;
             }
         }
     }

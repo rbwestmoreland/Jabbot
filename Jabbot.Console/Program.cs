@@ -94,29 +94,29 @@ namespace Jabbot.Console
             string key = ConfigurationManager.AppSettings["LOGENTRIES_ACCOUNT_KEY"];
             string location = ConfigurationManager.AppSettings["LOGENTRIES_LOCATION"];
 
-            LoggingConfiguration config = new LoggingConfiguration();
+            LoggingConfiguration loggingConfiguration = new LoggingConfiguration();
 
             ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget();
-            config.AddTarget("console", consoleTarget);
-            consoleTarget.Layout = "${date:format=HH\\:MM\\:ss} ${logger} ${message}";
+            consoleTarget.Layout = "${date:format=u} ${logger} ${level}: ${message}";
+            loggingConfiguration.AddTarget("console", consoleTarget);
 
-            LoggingRule rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
-            config.LoggingRules.Add(rule1);
+            LoggingRule loggingRule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
+            loggingConfiguration.LoggingRules.Add(loggingRule1);
 
             if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(location))
             {
                 LeTarget logEntiresTarget = new LeTarget();
-                config.AddTarget("logentries", logEntiresTarget);
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;
-                logEntiresTarget.Layout = "${date:format=ddd MMM dd} ${time:format=HH:mm:ss} ${date:format=zzz yyyy} ${logger} : ${LEVEL}, ${message}, ${exception:format=tostring}";
+                logEntiresTarget.Layout = "${date:format=u} ${level} ${message}: ${exception:format=tostring}";
+                loggingConfiguration.AddTarget("logentries", logEntiresTarget);
 
-                LoggingRule rule2 = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
-                config.LoggingRules.Add(rule2);
+                LoggingRule loggingRule2 = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);
+                loggingConfiguration.LoggingRules.Add(loggingRule2);
             }
 
-            LogManager.Configuration = config;
+            LogManager.Configuration = loggingConfiguration;
         }
 
         private static void InitializeJabbRClient()
