@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Jabbot.Core.Extensions;
 using Jabbot.Core.Jabbr;
 using Jabbot.Core.Sprockets;
 using Newtonsoft.Json;
@@ -12,10 +13,12 @@ using Newtonsoft.Json;
 namespace Jabbot.Sprockets.Community
 {
     /// <summary>
-    /// Port of the Hubot auto-stache.coffee script
+    /// Port / Mashup of the Hubot auto-stache.coffee & faceup.coffee scripts
     /// </summary>
     public class AutoStacheSprocket : RegexSprocket
     {
+        private static string[] Accessories { get { return new string[] { "hipster", "clown", "mustache", "scumbag", "jason" }; } }
+
         public override string Name { get { return "Auto-Stache Sprocket"; } }
 
         public override string Description { get { return "Automatically add mustaches to any images it can."; } }
@@ -78,9 +81,9 @@ namespace Jabbot.Sprockets.Community
                     var match = RoomMessagePatterns.First(p => p.Match(message.Content).Success).Match(message.Content);
                     var imageUrl = match.Groups[2].Value;
 
-                    if (CanStache(imageUrl))
+                    if (CanAccessorize(imageUrl))
                     {
-                        var stachedImageUrl = String.Format("http://mustachify.me/?src={0}", Uri.EscapeDataString(imageUrl));
+                        var stachedImageUrl = String.Format("http://faceup.me/img.jpg?overlay={0}&src={1}", Accessories.RandomElement(), Uri.EscapeDataString(imageUrl));
                         jabbrClient.SayToRoom(message.Room, stachedImageUrl);
                     }
                 }).ContinueWith(task =>
@@ -91,7 +94,7 @@ namespace Jabbot.Sprockets.Community
             }
         }
 
-        protected virtual bool CanStache(string imageUrl)
+        protected virtual bool CanAccessorize(string imageUrl)
         {
             var canStache = false;
 
