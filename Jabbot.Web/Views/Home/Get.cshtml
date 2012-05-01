@@ -8,7 +8,11 @@
         <h3 class="text-center">Status</h3>
         <hr />
         <p class="text-center">@if (Model.IsOnline()){<span class="status label label-success">online</span>}else{<span class="status label label-important">offline</span>}</p>
-        <p class="text-center">@if(!Model.IsOnline()){<small title="@Model.Status.LastSeen.ToString("MMM dd, yyyy") @@ @Model.Status.LastSeen.ToString("hh:mmtt") UTC">Last seen @Html.FormatTimeAgo(Model.Status.LastSeen, true)</small>}</p>
+        @{ 
+            var lastSeenTitle = Model.Status.LastSeen > DateTimeOffset.MinValue ? string.Format("{0} @ {1} UTC", Model.Status.LastSeen.ToString("MMM dd, yyyy"), Model.Status.LastSeen.ToString("hh:mmtt")) : "never";
+            var lastSeenValue = Model.Status.LastSeen > DateTimeOffset.MinValue ? Html.FormatTimeAgo(Model.Status.LastSeen, true) : "never";
+        }
+        <p class="text-center">@if (!Model.IsOnline()){<small title="@lastSeenTitle">Last seen @lastSeenValue</small>}</p>
     </div>
     <div class="span8">
         <div class="hero-unit text-center">
