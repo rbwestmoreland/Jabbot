@@ -21,7 +21,7 @@ namespace Jabbot.Sprockets.Community
 
         public override string Name { get { return "Auto-Stache Sprocket"; } }
 
-        public override string Description { get { return "Automatically add mustaches to any images it can."; } }
+        public override string Description { get { return "Automatically add mustaches, hipster glasses, clown noses, scumbag hats, or Jason masks to any images it can."; } }
 
         public override IEnumerable<string> Usage
         {
