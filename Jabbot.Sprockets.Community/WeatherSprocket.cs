@@ -27,11 +27,8 @@ namespace Jabbot.Sprockets.Community
                 return new string[]
                 {
                     "/msg <botnick> weather help",
-                    "/msg <botnick> weather <city or zip code>",
-                    "/msg <botnick> weather me <city or zip code>",
-                    "/msg <botnick> weather in <city or zip code>",
-                    "/msg <botnick> weather at <city or zip code>",
-                    "/msg <botnick> weather for <city or zip code>",
+                    "/msg <botnick> weather [me|in|at|for] <city or zip code>",
+                    "weather [me|in|at|for] <city or zip code>",
                 };
             } 
         }
