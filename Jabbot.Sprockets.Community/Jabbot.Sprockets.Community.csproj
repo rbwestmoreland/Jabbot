@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AchievementUnlockedSprocket.cs" />
+    <Compile Include="AsciiEmoticonsSprocket.cs" />
     <Compile Include="CarltonSprocket.cs" />
     <Compile Include="AckbarSprocket.cs" />
     <Compile Include="AsciiSprocket.cs" />
