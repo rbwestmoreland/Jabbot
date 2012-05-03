@@ -59,6 +59,7 @@
     <Compile Include="AsciiSprocket.cs" />
     <Compile Include="AutoStacheSprocket.cs" />
     <Compile Include="CoinSprocket.cs" />
+    <Compile Include="XkcdSprocket.cs" />
     <Compile Include="WeatherSprocket.cs" />
     <Compile Include="DecideSprocket.cs" />
     <Compile Include="RulesSprocket.cs" />
