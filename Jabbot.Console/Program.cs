@@ -83,10 +83,11 @@ namespace Jabbot.Console
         private static void Initialize()
         {
             InitializeLogger();
-            Logger.Info("Jabbot starting.");
+            Logger.Info("Jabbot Console Starting");
             InitializeRedisClient();
             InitializeJabbRClient();
             InitializeAlivePingCronJob();
+            Logger.Info("Jabbot Console Started");
         }
 
         private static void InitializeLogger()
@@ -97,7 +98,7 @@ namespace Jabbot.Console
             LoggingConfiguration loggingConfiguration = new LoggingConfiguration();
 
             ColoredConsoleTarget consoleTarget = new ColoredConsoleTarget();
-            consoleTarget.Layout = "${date:format=u} ${logger} ${level}: ${message}";
+            consoleTarget.Layout = "${date:format=u} ${logger} ${level} ${message}";
             loggingConfiguration.AddTarget("console", consoleTarget);
 
             LoggingRule loggingRule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
@@ -109,7 +110,7 @@ namespace Jabbot.Console
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;
-                logEntiresTarget.Layout = "${date:format=u} ${level} ${message}: ${exception:format=tostring}";
+                logEntiresTarget.Layout = "${date:format=u} ${logger} ${level} ${message} ${exception:format=tostring}";
                 loggingConfiguration.AddTarget("logentries", logEntiresTarget);
 
                 LoggingRule loggingRule2 = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);

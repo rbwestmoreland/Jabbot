@@ -21,7 +21,7 @@ namespace Jabbot.Web.Bootstrapper.Tasks
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;
-                logEntiresTarget.Layout = "${date:format=u} ${level} ${message}: ${exception:format=tostring}";
+                logEntiresTarget.Layout = "${date:format=u} ${logger} ${level} ${message} ${exception:format=tostring}";
                 loggingConfiguration.AddTarget("logentries", logEntiresTarget);
 
                 var loggingRule = new LoggingRule("*", LogLevel.Debug, logEntiresTarget);

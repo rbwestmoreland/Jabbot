@@ -10,7 +10,7 @@ namespace Jabbot.Web
         protected void Application_Start()
         {
             Bootstrapper.Bootstrapper.PerApplication();
-            Logger.Info("Jabbot Web started.");
+            Logger.Info("Jabbot Web Started");
         }
 
         public override void Init()
