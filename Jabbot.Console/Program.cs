@@ -40,9 +40,9 @@ namespace Jabbot.Console
 
                 while (true)
                 {
-                    System.Console.WriteLine("Press any key to power down...");
-                    System.Console.ReadKey();
-                    break;
+                    //System.Console.WriteLine("Press any key to power down...");
+                    //System.Console.ReadKey();
+                    //break;
                 }
             }
             catch (Exception ex)
