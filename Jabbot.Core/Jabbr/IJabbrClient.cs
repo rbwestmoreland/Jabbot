@@ -25,6 +25,6 @@ namespace Jabbot.Core.Jabbr
 
         bool SayToRoom(string room, string what);
 
-        bool Send(string command);
+        void Send(string command);
     }
 }
