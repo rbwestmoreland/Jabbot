@@ -133,7 +133,7 @@ namespace Jabbot.Console
             }
             catch (Exception ex)
             {
-                Logger.ErrorException("An unhandled exception occurred while initializing JabbR client.", ex);
+                Logger.ErrorException("An exception occurred while initializing JabbR client.", ex);
             }
         }
 
@@ -141,7 +141,10 @@ namespace Jabbot.Console
         {
             try
             {
-                JabbRClient.Logout();
+                if (JabbRClient != null)
+                {
+                    JabbRClient.Logout();
+                }
             }
             catch { }
         }
@@ -165,8 +168,11 @@ namespace Jabbot.Console
         {
             try
             {
-                RedisClient.Shutdown();
-                RedisClient.Dispose();
+                if (RedisClient != null)
+                {
+                    RedisClient.Shutdown();
+                    RedisClient.Dispose();
+                }
             }
             catch{ }
         }
@@ -179,7 +185,10 @@ namespace Jabbot.Console
                 const string key = "Jabbot:LastSeen";
                 try
                 {
-                    RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
+                    if (RedisClient != null)
+                    {
+                        RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -194,7 +203,10 @@ namespace Jabbot.Console
         {
             try
             {
-                AliveTimer.Dispose();
+                if (AliveTimer != null)
+                {
+                    AliveTimer.Dispose();
+                }
             }
             catch { }
         }
@@ -289,23 +301,26 @@ namespace Jabbot.Console
                 {
                     try
                     {
-                        var utcNow = DateTimeOffset.UtcNow;
+                        if (RedisClient != null)
+                        {
+                            var utcNow = DateTimeOffset.UtcNow;
 
-                        string allTimeHashId = "Jabbot:Statistics:Sprockets:Usage:AllTime";
-                        RedisClient.SetEntryInHashIfNotExists(allTimeHashId, sprocket, "0");
-                        RedisClient.IncrementValueInHash(allTimeHashId, sprocket, 1);
+                            string allTimeHashId = "Jabbot:Statistics:Sprockets:Usage:AllTime";
+                            RedisClient.SetEntryInHashIfNotExists(allTimeHashId, sprocket, "0");
+                            RedisClient.IncrementValueInHash(allTimeHashId, sprocket, 1);
 
-                        string yearHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", utcNow);
-                        RedisClient.SetEntryInHashIfNotExists(yearHashId, sprocket, "0");
-                        RedisClient.IncrementValueInHash(yearHashId, sprocket, 1);
+                            string yearHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", utcNow);
+                            RedisClient.SetEntryInHashIfNotExists(yearHashId, sprocket, "0");
+                            RedisClient.IncrementValueInHash(yearHashId, sprocket, 1);
 
-                        string monthHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", utcNow);
-                        RedisClient.SetEntryInHashIfNotExists(monthHashId, sprocket, "0");
-                        RedisClient.IncrementValueInHash(monthHashId, sprocket, 1);
+                            string monthHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", utcNow);
+                            RedisClient.SetEntryInHashIfNotExists(monthHashId, sprocket, "0");
+                            RedisClient.IncrementValueInHash(monthHashId, sprocket, 1);
 
-                        string dayHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", utcNow);
-                        RedisClient.SetEntryInHashIfNotExists(dayHashId, sprocket, "0");
-                        RedisClient.IncrementValueInHash(dayHashId, sprocket, 1);
+                            string dayHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", utcNow);
+                            RedisClient.SetEntryInHashIfNotExists(dayHashId, sprocket, "0");
+                            RedisClient.IncrementValueInHash(dayHashId, sprocket, 1);
+                        }
                     }
                     catch (Exception ex)
                     {
