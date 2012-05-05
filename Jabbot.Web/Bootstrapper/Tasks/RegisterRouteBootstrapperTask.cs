@@ -13,9 +13,15 @@ namespace Jabbot.Web.Bootstrapper.Tasks
             routes.IgnoreRoute("favicon.ico");
 
             routes.MapRoute(
-                "Default",
-                "{controller}/{action}/{id}",
+                "Home",
+                "",
                 new { controller = "Home", action = "Get", id = UrlParameter.Optional }
+            );
+
+            routes.MapRoute(
+                "Default",
+                "{*url}",
+                new { controller = "Error", action = "Http404" }
             );
         }
     }

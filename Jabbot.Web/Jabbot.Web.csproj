@@ -88,6 +88,7 @@
     <Compile Include="Bootstrapper\Tasks\DisableMvcResponseHeaderBootstrapperTask.cs" />
     <Compile Include="Bootstrapper\Tasks\IBootstrapperPerInstanceTask.cs" />
     <Compile Include="Bootstrapper\Tasks\IBootstrapperPerApplicationTask.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\Factories\TinyIoCControllerFactory.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">

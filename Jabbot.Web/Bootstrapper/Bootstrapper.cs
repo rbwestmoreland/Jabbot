@@ -56,6 +56,7 @@ namespace Jabbot.Web.Bootstrapper
             container.Register<IBootstrapperPerInstanceTask, OnExceptionBootstrapperTask>("OnExceptionBootstrapperTask");
             //Controllers
             container.Register<IController, HomeController>("Home").AsMultiInstance();
+            container.Register<IController, ErrorController>("Error").AsMultiInstance();
             //Domain
             container.Register<IRedisClient>(RedisClientConstructor);
             //Resource
