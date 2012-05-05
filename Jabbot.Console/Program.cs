@@ -199,7 +199,7 @@ namespace Jabbot.Console
             Logger.Info("Initializing Alive Ping Cron Completed");
         }
 
-        private static void DisposeAlivePintCronJob()
+        private static void DisposeAlivePingCronJob()
         {
             try
             {
@@ -217,7 +217,7 @@ namespace Jabbot.Console
             {
                 Logger.Info("Jabbot stopping.");
                 DisposeRedisClient();
-                DisposeAlivePintCronJob();
+                DisposeAlivePingCronJob();
                 DisposeJabbRClient();
             }
             catch { }
