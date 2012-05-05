@@ -29,8 +29,10 @@ namespace Jabbot.Core.Jabbr
             SubscribeToEvents();
         }
 
-        public virtual void JoinRoom(string room)
+        public virtual bool JoinRoom(string room)
         {
+            var success = false;
+
             if (string.IsNullOrWhiteSpace(room))
             {
                 throw new ArgumentNullException("room");
@@ -38,16 +40,20 @@ namespace Jabbot.Core.Jabbr
 
             try
             {
-                Send(String.Format("/join {0}", room));
+                success = Send(String.Format("/join {0}", room));
             }
             catch(Exception ex)
             {
                 Logger.ErrorException("An error occured while joining public room.", ex);
             }
+
+            return success;
         }
 
-        public virtual void JoinRoom(string room, string inviteCode)
+        public virtual bool JoinRoom(string room, string inviteCode)
         {
+            var success = false;
+
             if (string.IsNullOrWhiteSpace(room))
             {
                 throw new ArgumentNullException("room");
@@ -60,16 +66,20 @@ namespace Jabbot.Core.Jabbr
 
             try
             {
-                Send(String.Format("/join {0} {1}", room, inviteCode));
+                success = Send(String.Format("/join {0} {1}", room, inviteCode));
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An error occured while joining private room.", ex);
             }
+
+            return success;
         }
 
-        public virtual void LeaveRoom(string room)
+        public virtual bool LeaveRoom(string room)
         {
+            var success = false;
+
             if (string.IsNullOrWhiteSpace(room))
             {
                 throw new ArgumentNullException("room");
@@ -77,12 +87,14 @@ namespace Jabbot.Core.Jabbr
 
             try
             {
-                Send(String.Format("/leave {0}", room));
+                success = Send(String.Format("/leave {0}", room));
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An error occured while leaving room.", ex);
             }
+
+            return success;
         }
 
         public virtual bool Login(string nick, string password)
@@ -160,8 +172,10 @@ namespace Jabbot.Core.Jabbr
             }
         }
 
-        public virtual void PrivateReply(string who, string what)
+        public virtual bool PrivateReply(string who, string what)
         {
+            var success = false;
+
             if (string.IsNullOrWhiteSpace(who))
             {
                 throw new ArgumentNullException("who");
@@ -174,16 +188,20 @@ namespace Jabbot.Core.Jabbr
 
             try
             {
-                Send(String.Format("/msg {0} {1}", who, what));
+                success = Send(String.Format("/msg {0} {1}", who, what));
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An error occured while sending a private message.", ex);
             }
+
+            return success;
         }
 
-        public virtual void SayToRoom(string room, string what)
+        public virtual bool SayToRoom(string room, string what)
         {
+            var success = false;
+
             if (string.IsNullOrWhiteSpace(room))
             {
                 throw new ArgumentNullException("room");
@@ -202,15 +220,20 @@ namespace Jabbot.Core.Jabbr
             try
             {
                 Proxy.Invoke("send", what, room).Wait();
+                success = true;
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An error occured while sending a room message.", ex);
             }
+
+            return success;
         }
 
-        public virtual void Send(string command)
+        public virtual bool Send(string command)
         {
+            var success = false;
+
             if (string.IsNullOrWhiteSpace(command))
             {
                 throw new ArgumentNullException("command");
@@ -219,11 +242,14 @@ namespace Jabbot.Core.Jabbr
             try
             {
                 Proxy.Invoke("send", command, null).Wait();
+                success = true;
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An error occured while sending a command.", ex);
             }
+
+            return success;
         }
 
         protected virtual void SubscribeToEvents()

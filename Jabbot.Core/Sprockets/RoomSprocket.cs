@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Jabbot.Core.Extensions;
 using Jabbot.Core.Jabbr;
+using System;
 
 namespace Jabbot.Core.Sprockets
 {
@@ -84,21 +85,36 @@ namespace Jabbot.Core.Sprockets
 
                     if (string.IsNullOrWhiteSpace(invitecode))
                     {
-                        jabbrClient.JoinRoom(room);
+                        if (jabbrClient.JoinRoom(room))
+                        {
+                            jabbrClient.SayToRoom(room, Greetings.RandomElement());
+                        }
+                        else
+                        {
+                            jabbrClient.PrivateReply(message.From, string.Format("Unable to join room {0}. If the room is private, make sure to /allow [botname] [room] or use /msg [botname] join room [room] [invitecode]", room));
+                        }
                     }
                     else
                     {
-                        jabbrClient.JoinRoom(room, invitecode);
+                        if (jabbrClient.JoinRoom(room, invitecode))
+                        {
+                            jabbrClient.SayToRoom(room, Greetings.RandomElement());
+                        }
+                        else
+                        {
+                            jabbrClient.PrivateReply(message.From, string.Format("Unable to join room {0}. The invite code {1} is invalid.", room, invitecode));
+                        }
                     }
-
-                    jabbrClient.SayToRoom(room, Greetings.RandomElement());
                 }
                 else if (PrivateMessagePatterns.ElementAt(2).Match(message.Content).Success)
                 {
                     var match = PrivateMessagePatterns.First(p => p.Match(message.Content).Success).Match(message.Content);
                     var room = match.Groups[2].Value;
                     jabbrClient.SayToRoom(room, Farewells.RandomElement());
-                    jabbrClient.LeaveRoom(room);
+                    if (!jabbrClient.LeaveRoom(room))
+                    {
+                        jabbrClient.PrivateReply(message.From, string.Format("Unable to leave room {0}.", room));
+                    }
                 }
             }
         }

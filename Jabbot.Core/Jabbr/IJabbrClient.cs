@@ -9,11 +9,11 @@ namespace Jabbot.Core.Jabbr
         Action<string, string, string> OnReceivePrivateMessage { get; set; }
         Action<dynamic, string> OnReceiveRoomMessage { get; set; }
 
-        void JoinRoom(string room);
+        bool JoinRoom(string room);
 
-        void JoinRoom(string room, string inviteCode);
+        bool JoinRoom(string room, string inviteCode);
 
-        void LeaveRoom(string room);
+        bool LeaveRoom(string room);
 
         bool Login(string nick, string password);
 
@@ -21,10 +21,10 @@ namespace Jabbot.Core.Jabbr
 
         void Logout();
 
-        void PrivateReply(string who, string what);
+        bool PrivateReply(string who, string what);
 
-        void SayToRoom(string room, string what);
+        bool SayToRoom(string room, string what);
 
-        void Send(string command);
+        bool Send(string command);
     }
 }
