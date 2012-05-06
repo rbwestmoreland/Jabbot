@@ -234,6 +234,8 @@ namespace Jabbot.Console
                         return;
                     }
 
+                    Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
+
                     var privateMessage = new PrivateMessage(from, WebUtility.HtmlDecode(content));
                     var handled = false;
 
@@ -274,6 +276,8 @@ namespace Jabbot.Console
                     {
                         return;
                     }
+
+                    Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
 
                     var roomMessage = new RoomMessage(room, from, WebUtility.HtmlDecode(content));
 
