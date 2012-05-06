@@ -128,6 +128,8 @@ namespace Jabbot.Console
                 JabbRClient = new JabbrClient(BotServer);
                 JabbRClient.OnReceivePrivateMessage += ProcessPrivateMessage;
                 JabbRClient.OnReceiveRoomMessage += ProcessRoomMessage;
+                JabbRClient.OnClosed += ProcessDisconnected;
+                JabbRClient.OnError += ProcessError;
                 JabbRClient.Login(BotName, BotPassword, BotGravatarEmail);
                 Logger.Info("Initializing JabbR Client Completed");
             }
@@ -297,6 +299,16 @@ namespace Jabbot.Console
                     Logger.ErrorException("An error occured while processing a room message.", exception);
                 }
             });
+        }
+
+        private static void ProcessDisconnected()
+        {
+            Logger.Info("JabbrClient disconnected");
+        }
+
+        private static void ProcessError(Exception ex)
+        {
+            Logger.ErrorException("An exception has occured in the JabbrClient", ex);
         }
 
         private static void IncrementSprocketUsage(string sprocket)

@@ -9,6 +9,8 @@ namespace Jabbot.Core.Jabbr
     public class JabbrClient : IJabbrClient
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
+        public virtual Action OnClosed { get; set; }
+        public virtual Action<Exception> OnError { get; set; }
         public virtual Action<string, string, string> OnReceivePrivateMessage { get; set; }
         public virtual Action<dynamic, string> OnReceiveRoomMessage { get; set; }
 
@@ -293,6 +295,26 @@ namespace Jabbot.Core.Jabbr
                         Rooms.Remove(room.ToLower());
                     }
                 });
+
+                Connection.Closed += () =>
+                    {
+                        var action = OnClosed;
+
+                        if (action != null)
+                        {
+                            OnClosed.Invoke();
+                        }
+                    };
+
+                Connection.Error += (Exception ex) =>
+                    {
+                        var action = OnError;
+
+                        if (action != null)
+                        {
+                            action.Invoke(ex);
+                        }
+                    };
             }
             catch (Exception ex)
             {

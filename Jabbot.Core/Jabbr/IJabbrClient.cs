@@ -6,6 +6,8 @@ namespace Jabbot.Core.Jabbr
 {
     public interface IJabbrClient
     {
+        Action OnClosed { get; set; }
+        Action<Exception> OnError { get; set; }
         Action<string, string, string> OnReceivePrivateMessage { get; set; }
         Action<dynamic, string> OnReceiveRoomMessage { get; set; }
 
