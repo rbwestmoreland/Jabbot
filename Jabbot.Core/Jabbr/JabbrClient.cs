@@ -27,7 +27,7 @@ namespace Jabbot.Core.Jabbr
 
             Rooms = new List<string>();
             Connection = new HubConnection(url);
-            Proxy = Connection.CreateProxy("JabbR.Chat");
+            Proxy = Connection.CreateProxy("chat");
             SubscribeToEvents();
         }
 
@@ -142,7 +142,7 @@ namespace Jabbot.Core.Jabbr
                     }
                 });
 
-                success = !Proxy.Invoke<bool>("Join").Result;
+                success = !Proxy.Invoke<bool>("join").Result;
 
                 if (success)
                 {
