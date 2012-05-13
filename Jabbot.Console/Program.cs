@@ -187,7 +187,7 @@ namespace Jabbot.Console
                 const string key = "Jabbot:LastSeen";
                 try
                 {
-                    if (RedisClient != null)
+                    if (JabbRClient != null && JabbRClient.IsConnected && RedisClient != null)
                     {
                         RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
                     }

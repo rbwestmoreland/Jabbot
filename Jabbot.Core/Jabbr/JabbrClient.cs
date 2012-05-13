@@ -9,6 +9,7 @@ namespace Jabbot.Core.Jabbr
     public class JabbrClient : IJabbrClient
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
+        public virtual Boolean IsConnected { get { try { return Connection.IsActive; } catch { return false; } } }
         public virtual Action OnClosed { get; set; }
         public virtual Action<Exception> OnError { get; set; }
         public virtual Action<string, string, string> OnReceivePrivateMessage { get; set; }
