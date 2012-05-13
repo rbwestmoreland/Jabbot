@@ -79,6 +79,9 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GlobalAssemblyInfo.cs">
+      <Link>Properties\GlobalAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Bootstrapper\Bootstrapper.cs" />
     <Compile Include="Bootstrapper\Tasks\InitializeLoggerBootstrapperTask.cs" />
     <Compile Include="Bootstrapper\Tasks\OnExceptionBootstrapperTask.cs" />
