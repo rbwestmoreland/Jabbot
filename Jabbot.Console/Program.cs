@@ -236,8 +236,6 @@ namespace Jabbot.Console
                         return;
                     }
 
-                    Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
-
                     var privateMessage = new PrivateMessage(from, WebUtility.HtmlDecode(content));
                     var handled = false;
 
@@ -245,6 +243,7 @@ namespace Jabbot.Console
                     {
                         if (sprocket.CanHandle(privateMessage))
                         {
+                            Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
                             IncrementSprocketUsage(sprocket.Name);
                             sprocket.Handle(privateMessage, JabbRClient);
                             handled = true;
@@ -279,14 +278,13 @@ namespace Jabbot.Console
                         return;
                     }
 
-                    Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
-
                     var roomMessage = new RoomMessage(room, from, WebUtility.HtmlDecode(content));
 
                     foreach (var sprocket in Container.Sprockets)
                     {
                         if (sprocket.CanHandle(roomMessage))
                         {
+                            Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
                             IncrementSprocketUsage(sprocket.Name);
                             sprocket.Handle(roomMessage, JabbRClient);
                             break;
