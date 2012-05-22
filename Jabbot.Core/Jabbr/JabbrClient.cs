@@ -9,15 +9,14 @@ namespace Jabbot.Core.Jabbr
     public class JabbrClient : IJabbrClient
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private HubConnection Connection { get; set; }
+        private IHubProxy Proxy { get; set; }
+        private List<string> Rooms { get; set; }
         public virtual Boolean IsConnected { get { try { return Connection.IsActive; } catch { return false; } } }
         public virtual Action OnClosed { get; set; }
         public virtual Action<Exception> OnError { get; set; }
         public virtual Action<string, string, string> OnReceivePrivateMessage { get; set; }
         public virtual Action<dynamic, string> OnReceiveRoomMessage { get; set; }
-
-        private HubConnection Connection { get; set; }
-        private IHubProxy Proxy { get; set; }
-        private List<string> Rooms { get; set; }
 
         public JabbrClient(string url)
         {
@@ -303,7 +302,7 @@ namespace Jabbot.Core.Jabbr
 
                         if (action != null)
                         {
-                            OnClosed.Invoke();
+                            action.Invoke();
                         }
                     };
 
