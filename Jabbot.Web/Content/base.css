@@ -38,7 +38,7 @@ p
 .hero-unit h1
 {
     font-size: 100px;
-    font-family: 'Lobster', inherit;
+    font-family: 'Lobster', Cursive;
 }
 
 
@@ -71,6 +71,6 @@ p
 
 #footer .logo-font
 {
-    font-family: 'Lobster', inherit;
+    font-family: 'Lobster', Cursive;
     font-size: 24px;
 }
