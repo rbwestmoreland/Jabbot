@@ -13,8 +13,6 @@ namespace Jabbot.Core.Jabbr
         private IHubProxy Proxy { get; set; }
         private List<string> Rooms { get; set; }
         public virtual Boolean IsConnected { get { try { return Connection.IsActive; } catch { return false; } } }
-        public virtual Action OnClosed { get; set; }
-        public virtual Action<Exception> OnError { get; set; }
         public virtual Action<string, string, string> OnReceivePrivateMessage { get; set; }
         public virtual Action<dynamic, string> OnReceiveRoomMessage { get; set; }
 
@@ -128,20 +126,6 @@ namespace Jabbot.Core.Jabbr
                 Connection.Start().Wait(timeout, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
 
-                Proxy.On("userCreated", () =>
-                {
-                });
-
-                Proxy.On<IEnumerable<dynamic>>("logOn", rooms =>
-                {
-                    foreach (var item in rooms)
-                    {
-                        string name = item.Name.Value;
-                        long count = item.Count.Value;
-                        Rooms.Add(name);
-                    }
-                });
-
                 success = !Proxy.Invoke<bool>("join").Result;
 
                 if (success)
@@ -167,9 +151,7 @@ namespace Jabbot.Core.Jabbr
             try
             {
                 Rooms.ForEach(r => LeaveRoom(r));
-                Proxy = null;
-                Connection.Stop();
-                Connection = null;
+                Send("/logout");
             }
             catch (Exception ex)
             {
@@ -258,6 +240,20 @@ namespace Jabbot.Core.Jabbr
         {
             try
             {
+                Proxy.On("userCreated", () =>
+                {
+                });
+
+                Proxy.On<IEnumerable<dynamic>>("logOn", rooms =>
+                {
+                    foreach (var item in rooms)
+                    {
+                        string name = item.Name.Value;
+                        long count = item.Count.Value;
+                        Rooms.Add(name);
+                    }
+                });
+
                 Proxy.On<string, string, string>("sendPrivateMessage", (string arg1, string arg2, string arg3) =>
                 {
                     var action = OnReceivePrivateMessage;
@@ -295,31 +291,38 @@ namespace Jabbot.Core.Jabbr
                         Rooms.Remove(room.ToLower());
                     }
                 });
-
-                Connection.Closed += () =>
-                    {
-                        var action = OnClosed;
-
-                        if (action != null)
-                        {
-                            action.Invoke();
-                        }
-                    };
-
-                Connection.Error += (Exception ex) =>
-                    {
-                        var action = OnError;
-
-                        if (action != null)
-                        {
-                            action.Invoke(ex);
-                        }
-                    };
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An error occured while subscribing to events.", ex); ;
             }
         }
+
+        #region Disposable Member(s)
+
+        private bool Disposed { get; set; }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposed)
+            {
+                if (disposing)
+                {
+                    if (Connection.IsActive)
+                    {
+                        Connection.Stop();
+                    }
+                }
+                Disposed = true;
+            }
+        }
+
+        #endregion Disposable Member(s)
     }
 }

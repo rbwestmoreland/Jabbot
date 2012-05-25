@@ -20,12 +20,12 @@ namespace Jabbot.Console
         private static string BotPassword { get { return ConfigurationManager.AppSettings["Bot.Password"]; } }
         private static string BotGravatarEmail { get { return ConfigurationManager.AppSettings["Bot.GravatarEmail"]; } }
         private static string BotServer { get { return ConfigurationManager.AppSettings["Bot.Server"]; } }
-        private static string RedisToGoUrl { get { return ConfigurationManager.AppSettings["REDISTOGO_URL"]; } }
         private static string Version { get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); } }
         private static Logger Logger { get { return LogManager.GetCurrentClassLogger(); } }
         private static IJabbrClient JabbRClient { get; set; }
         private static IRedisClient RedisClient { get; set; }
         private static Timer AliveTimer { get; set; }
+        private static bool ShouldExit { get; set; }
 
         static int Main(string[] args)
         {
@@ -34,16 +34,9 @@ namespace Jabbot.Console
             
             try
             {
-                Initialize();
-
                 System.Console.WriteLine(String.Format("Jabbot v{0}", Version));
-
-                while (true)
-                {
-                    //System.Console.WriteLine("Press any key to power down...");
-                    //System.Console.ReadKey();
-                    //break;
-                }
+                Initialize();
+                while (!ShouldExit) { }
             }
             catch (Exception ex)
             {
@@ -65,19 +58,18 @@ namespace Jabbot.Console
             if (e.IsTerminating)
             {
                 Logger.FatalException("An unhandled exception is causing the worker to terminate.", exception);
+                ShouldExit = true;
             }
             else
             {
                 Logger.ErrorException("An unhandled exception occurred in the worker process.", exception);
             }
-
-            Shutdown();
         }
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             Logger.ErrorException("An unobserved task exception occurred.", e.Exception);
-            Shutdown();
+            e.SetObserved();
         }
 
         private static void Initialize()
@@ -128,8 +120,6 @@ namespace Jabbot.Console
                 JabbRClient = new JabbrClient(BotServer);
                 JabbRClient.OnReceivePrivateMessage += ProcessPrivateMessage;
                 JabbRClient.OnReceiveRoomMessage += ProcessRoomMessage;
-                JabbRClient.OnClosed += ProcessDisconnected;
-                JabbRClient.OnError += ProcessError;
                 JabbRClient.Login(BotName, BotPassword, BotGravatarEmail);
                 Logger.Info("Initializing JabbR Client Completed");
             }
@@ -139,24 +129,12 @@ namespace Jabbot.Console
             }
         }
 
-        private static void DisposeJabbRClient()
-        {
-            try
-            {
-                if (JabbRClient != null)
-                {
-                    JabbRClient.Logout();
-                }
-            }
-            catch { }
-        }
-
         private static void InitializeRedisClient()
         {
             try
             {
                 Logger.Info("Initializing Redis Client Started");
-                var uri = new Uri(RedisToGoUrl);
+                var uri = new Uri(ConfigurationManager.AppSettings["REDISTOGO_URL"]);
                 RedisClient = new RedisClient(uri);
                 Logger.Info("Initializing Redis Client Completed");
             }
@@ -164,19 +142,6 @@ namespace Jabbot.Console
             {
                 Logger.ErrorException("An error occured initializing the RedisClient.", ex);
             }
-        }
-
-        private static void DisposeRedisClient()
-        {
-            try
-            {
-                if (RedisClient != null)
-                {
-                    RedisClient.Shutdown();
-                    RedisClient.Dispose();
-                }
-            }
-            catch{ }
         }
 
         private static void InitializeAlivePingCronJob()
@@ -201,26 +166,14 @@ namespace Jabbot.Console
             Logger.Info("Initializing Alive Ping Cron Completed");
         }
 
-        private static void DisposeAlivePingCronJob()
-        {
-            try
-            {
-                if (AliveTimer != null)
-                {
-                    AliveTimer.Dispose();
-                }
-            }
-            catch { }
-        }
-
         private static void Shutdown()
         {
             try
             {
-                Logger.Info("Jabbot stopping.");
-                DisposeRedisClient();
-                DisposeAlivePingCronJob();
-                DisposeJabbRClient();
+                AliveTimer = null;
+                JabbRClient.Dispose();
+                RedisClient.Dispose();
+                Logger.Info("Exiting");
             }
             catch { }
         }
@@ -297,16 +250,6 @@ namespace Jabbot.Console
                     Logger.ErrorException("An error occured while processing a room message.", exception);
                 }
             });
-        }
-
-        private static void ProcessDisconnected()
-        {
-            Logger.Info("JabbrClient disconnected");
-        }
-
-        private static void ProcessError(Exception ex)
-        {
-            Logger.ErrorException("An exception has occured in the JabbrClient", ex);
         }
 
         private static void IncrementSprocketUsage(string sprocket)
