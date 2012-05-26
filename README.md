@@ -20,7 +20,7 @@ Made possible by
 ---
 Inspired by [Hubot](http://hubot.github.com) and [Jabbot](https://github.com/davidfowl/Jabbot) (the original) 
 
-Licensed under the MIT License by [Bates Westmoreland](https://github.com/betobates)
+Licensed under the MIT License by [Bates Westmoreland](https://github.com/rbwestmoreland)
 
 Built with [SignalR](http://signalr.net), [JabbR](http://jabbr.net), and [Bootstrap](http://twitter.github.com/bootstrap). Icons from [Glyphicons Free](http://glyphicons.com).
 
