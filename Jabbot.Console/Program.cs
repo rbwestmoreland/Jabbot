@@ -167,8 +167,9 @@ namespace Jabbot.Console
                         {
                             Logger.Info(string.Format("Connection to {0} is broken.", BotServer));
                             Logger.Info(string.Format("Connection to {0} is being re-established...", BotServer));
-                            var success = JabbRClient.Connect();
-                            if (success)
+                            var connected = JabbRClient.Connect();
+                            var loggedIn = JabbRClient.Login(BotName, BotPassword, BotGravatarEmail);
+                            if (connected && loggedIn)
                             {
                                 Logger.Info(string.Format("Connection to {0} was re-established.", BotServer));
                             }

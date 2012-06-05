@@ -24,6 +24,8 @@ namespace Jabbot.Core.Jabbr
 
         bool Connect();
 
+        void Disconnect();
+
         bool PrivateReply(string who, string what);
 
         bool SayToRoom(string room, string what);

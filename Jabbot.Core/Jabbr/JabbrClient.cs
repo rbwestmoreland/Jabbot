@@ -12,7 +12,6 @@ namespace Jabbot.Core.Jabbr
         private HubConnection Connection { get; set; }
         private IHubProxy Proxy { get; set; }
         private List<string> Rooms { get; set; }
-        private bool IsLoggedIn { get; set; }
         public virtual bool IsConnected { get { return CheckIsConnected(); } }
         public virtual Action<string, string, string> OnReceivePrivateMessage { get; set; }
         public virtual Action<dynamic, string> OnReceiveRoomMessage { get; set; }
@@ -130,11 +129,6 @@ namespace Jabbot.Core.Jabbr
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
 
-            if (IsLoggedIn)
-            {
-                throw new InvalidOperationException("JabbrClient has already logged in. Call Logout before calling Login again.");
-            }
-
             if (string.IsNullOrWhiteSpace(nick))
             {
                 throw new ArgumentNullException("nick");
@@ -153,8 +147,17 @@ namespace Jabbot.Core.Jabbr
                 {
                     Send(String.Format("/gravatar {0}", gravatarEmail));
                 }
-
-                IsLoggedIn = true;
+            }
+            catch (AggregateException aex)
+            {
+                if (aex.GetBaseException() is InvalidOperationException && aex.GetBaseException().Message.Equals("Use /nick [nickname] [oldpassword] [newpassword] to change and existing password."))
+                {
+                    success = true;
+                }
+                else
+                {
+                    Logger.ErrorException("An error occured while logging in.", aex);
+                }
             }
             catch (Exception ex)
             {
@@ -171,17 +174,10 @@ namespace Jabbot.Core.Jabbr
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
 
-            if (!IsLoggedIn)
-            {
-                throw new InvalidOperationException("Login must be called first, before calling logout.");
-            }
-
             try
             {
                 Rooms.ForEach(r => LeaveRoom(r));
                 Send("/logout");
-                Connection.Stop();
-                IsLoggedIn = false;
             }
             catch (Exception ex)
             {
@@ -193,13 +189,10 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (Connection.IsActive)
-            {
-                Connection.Stop();
-            }
-
             try
             {
+                Disconnect();
+
                 var cancellationToken = new CancellationToken();
                 var timeout = (int)new TimeSpan(0, 0, 5).TotalMilliseconds;
                 Connection.Start().Wait(timeout, cancellationToken);
@@ -213,6 +206,21 @@ namespace Jabbot.Core.Jabbr
             }
 
             return success;
+        }
+
+        public virtual void Disconnect()
+        {
+            try
+            {
+                if (Connection.IsActive)
+                {
+                    Connection.Stop();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorException("An error occured while disconnecting.", ex);
+            }
         }
 
         public virtual bool PrivateReply(string who, string what)
@@ -412,10 +420,8 @@ namespace Jabbot.Core.Jabbr
             {
                 if (disposing)
                 {
-                    if (Connection.IsActive)
-                    {
-                        Connection.Stop();
-                    }
+                    Logout();
+                    Disconnect();
                 }
                 Disposed = true;
             }
