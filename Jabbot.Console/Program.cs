@@ -157,6 +157,7 @@ namespace Jabbot.Console
                     {
                         if (JabbRClient.IsConnected)
                         {
+                            Logger.Info(string.Format("Connection to {0} is established.", BotServer));
                             if (RedisClient != null)
                             {
                                 RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
@@ -164,16 +165,26 @@ namespace Jabbot.Console
                         }
                         else
                         {
-                            JabbRClient.Connect();
+                            Logger.Info(string.Format("Connection to {0} is broken.", BotServer));
+                            Logger.Info(string.Format("Connection to {0} is being re-established...", BotServer));
+                            var success = JabbRClient.Connect();
+                            if (success)
+                            {
+                                Logger.Info(string.Format("Connection to {0} was re-established.", BotServer));
+                            }
+                            else
+                            {
+                                Logger.Error(string.Format("Connection to {0} was not re-established.", BotServer));
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.ErrorException(String.Format("There was an error setting redis key: {0}", key), ex);
+                    Logger.ErrorException(String.Format("There was an error while checking the connection status.", key), ex);
                 }
             });
-            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 30), new TimeSpan(0, 0, 30));
+            AliveTimer = new Timer(callback, null, new TimeSpan(0, 1, 0), new TimeSpan(0, 1, 0));
             Logger.Info("Initializing Alive Ping Cron Completed");
         }
 
