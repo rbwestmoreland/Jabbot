@@ -12,7 +12,8 @@ namespace Jabbot.Core.Jabbr
         private HubConnection Connection { get; set; }
         private IHubProxy Proxy { get; set; }
         private List<string> Rooms { get; set; }
-        public virtual Boolean IsConnected { get { try { return Connection.IsActive; } catch { return false; } } }
+        private bool IsLoggedIn { get; set; }
+        public virtual bool IsConnected { get { return CheckIsConnected(); } }
         public virtual Action<string, string, string> OnReceivePrivateMessage { get; set; }
         public virtual Action<dynamic, string> OnReceiveRoomMessage { get; set; }
 
@@ -32,6 +33,11 @@ namespace Jabbot.Core.Jabbr
         public virtual bool JoinRoom(string room)
         {
             var success = false;
+
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
 
             if (string.IsNullOrWhiteSpace(room))
             {
@@ -54,6 +60,11 @@ namespace Jabbot.Core.Jabbr
         public virtual bool JoinRoom(string room, string inviteCode)
         {
             var success = false;
+
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
 
             if (string.IsNullOrWhiteSpace(room))
             {
@@ -82,6 +93,11 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
+
             if (string.IsNullOrWhiteSpace(room))
             {
                 throw new ArgumentNullException("room");
@@ -109,6 +125,16 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
+
+            if (IsLoggedIn)
+            {
+                throw new InvalidOperationException("JabbrClient has already logged in. Call Logout before calling Login again.");
+            }
+
             if (string.IsNullOrWhiteSpace(nick))
             {
                 throw new ArgumentNullException("nick");
@@ -121,22 +147,14 @@ namespace Jabbot.Core.Jabbr
 
             try
             {
-                var cancellationToken = new CancellationToken();
-                var timeout = (int)new TimeSpan(0, 0, 5).TotalMilliseconds;
-                Connection.Start().Wait(timeout, cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
+                Send(String.Format("/nick {0} {1}", nick, password));
 
-                success = !Proxy.Invoke<bool>("join").Result;
-
-                if (success)
+                if (!string.IsNullOrWhiteSpace(gravatarEmail))
                 {
-                    Send(String.Format("/nick {0} {1}", nick, password));
-
-                    if (!string.IsNullOrWhiteSpace(gravatarEmail))
-                    {
-                        Send(String.Format("/gravatar {0}", gravatarEmail));
-                    }
+                    Send(String.Format("/gravatar {0}", gravatarEmail));
                 }
+
+                IsLoggedIn = true;
             }
             catch (Exception ex)
             {
@@ -148,10 +166,22 @@ namespace Jabbot.Core.Jabbr
 
         public virtual void Logout()
         {
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
+
+            if (!IsLoggedIn)
+            {
+                throw new InvalidOperationException("Login must be called first, before calling logout.");
+            }
+
             try
             {
                 Rooms.ForEach(r => LeaveRoom(r));
                 Send("/logout");
+                Connection.Stop();
+                IsLoggedIn = false;
             }
             catch (Exception ex)
             {
@@ -159,9 +189,40 @@ namespace Jabbot.Core.Jabbr
             }
         }
 
+        public virtual bool Connect()
+        {
+            var success = false;
+
+            if (Connection.IsActive)
+            {
+                Connection.Stop();
+            }
+
+            try
+            {
+                var cancellationToken = new CancellationToken();
+                var timeout = (int)new TimeSpan(0, 0, 5).TotalMilliseconds;
+                Connection.Start().Wait(timeout, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                success = !Proxy.Invoke<bool>("join").Result;
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorException("An error occured while reconnecting.", ex);
+            }
+
+            return success;
+        }
+
         public virtual bool PrivateReply(string who, string what)
         {
             var success = false;
+
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
 
             if (string.IsNullOrWhiteSpace(who))
             {
@@ -189,6 +250,11 @@ namespace Jabbot.Core.Jabbr
         public virtual bool SayToRoom(string room, string what)
         {
             var success = false;
+
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
 
             if (string.IsNullOrWhiteSpace(room))
             {
@@ -220,6 +286,11 @@ namespace Jabbot.Core.Jabbr
 
         public virtual void Send(string command)
         {
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
+
             if (string.IsNullOrWhiteSpace(command))
             {
                 throw new ArgumentNullException("command");
@@ -234,6 +305,33 @@ namespace Jabbot.Core.Jabbr
                 Logger.ErrorException("An error occured while sending a command.", ex.GetBaseException());
                 throw;
             }
+        }
+
+        protected virtual bool CheckIsConnected()
+        {
+            var isConnected = false;
+
+            if (!Connection.IsActive)
+            {
+                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
+            }
+
+            try
+            {
+                if (Connection.IsActive)
+                {
+                    var outOfSync = Proxy.Invoke<bool>("CheckStatus").Result;
+                    var userInfo = Proxy.Invoke<dynamic>("GetUserInfo").Result;
+                    string status = userInfo.Status;
+                    isConnected = !status.Equals("offline", StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorException("An error occured while checking is connected.", ex.GetBaseException());
+            }
+
+            return isConnected;
         }
 
         protected virtual void SubscribeToEvents()

@@ -6,7 +6,7 @@ namespace Jabbot.Core.Jabbr
 {
     public interface IJabbrClient : IDisposable
     {
-        Boolean IsConnected { get; }
+        bool IsConnected { get; }
         Action<string, string, string> OnReceivePrivateMessage { get; set; }
         Action<dynamic, string> OnReceiveRoomMessage { get; set; }
 
@@ -21,6 +21,8 @@ namespace Jabbot.Core.Jabbr
         bool Login(string nick, string password, string gravatarEmail);
 
         void Logout();
+
+        bool Connect();
 
         bool PrivateReply(string who, string what);
 

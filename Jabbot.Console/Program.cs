@@ -120,6 +120,7 @@ namespace Jabbot.Console
                 JabbRClient = new JabbrClient(BotServer);
                 JabbRClient.OnReceivePrivateMessage += ProcessPrivateMessage;
                 JabbRClient.OnReceiveRoomMessage += ProcessRoomMessage;
+                JabbRClient.Connect();
                 JabbRClient.Login(BotName, BotPassword, BotGravatarEmail);
                 Logger.Info("Initializing JabbR Client Completed");
             }
@@ -152,9 +153,19 @@ namespace Jabbot.Console
                 const string key = "Jabbot:LastSeen";
                 try
                 {
-                    if (JabbRClient != null && JabbRClient.IsConnected && RedisClient != null)
+                    if (JabbRClient != null)
                     {
-                        RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
+                        if (JabbRClient.IsConnected)
+                        {
+                            if (RedisClient != null)
+                            {
+                                RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
+                            }
+                        }
+                        else
+                        {
+                            JabbRClient.Connect();
+                        }
                     }
                 }
                 catch (Exception ex)
