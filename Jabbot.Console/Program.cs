@@ -157,7 +157,7 @@ namespace Jabbot.Console
                     {
                         if (JabbRClient.IsConnected)
                         {
-                            Logger.Info(string.Format("Connection to {0} is established.", BotServer));
+                            //Logger.Info(string.Format("Connection to {0} is established.", BotServer));
                             if (RedisClient != null)
                             {
                                 RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
@@ -167,9 +167,7 @@ namespace Jabbot.Console
                         {
                             Logger.Info(string.Format("Connection to {0} is broken.", BotServer));
                             Logger.Info(string.Format("Connection to {0} is being re-established...", BotServer));
-                            var connected = JabbRClient.Connect();
-                            var loggedIn = JabbRClient.Login(BotName, BotPassword, BotGravatarEmail);
-                            if (connected && loggedIn)
+                            if (JabbRClient.Connect() && JabbRClient.Login(BotName, BotPassword, BotGravatarEmail))
                             {
                                 Logger.Info(string.Format("Connection to {0} was re-established.", BotServer));
                             }

@@ -193,16 +193,17 @@ namespace Jabbot.Core.Jabbr
             {
                 Disconnect();
 
-                var cancellationToken = new CancellationToken();
                 var timeout = (int)new TimeSpan(0, 0, 5).TotalMilliseconds;
-                Connection.Start().Wait(timeout, cancellationToken);
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                success = !Proxy.Invoke<bool>("join").Result;
+                var connectionStarted = Connection.Start().Wait(timeout);
+
+                if (connectionStarted)
+                {
+                    success = !Proxy.Invoke<bool>("join").Result;
+                }
             }
             catch (Exception ex)
             {
-                Logger.ErrorException("An error occured while reconnecting.", ex);
+                Logger.ErrorException("An error occured while connecting.", ex);
             }
 
             return success;
@@ -334,9 +335,9 @@ namespace Jabbot.Core.Jabbr
                     isConnected = !status.Equals("offline", StringComparison.OrdinalIgnoreCase);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Logger.ErrorException("An error occured while checking is connected.", ex.GetBaseException());
+                //Logger.ErrorException("An error occured while checking is connected.", ex.GetBaseException());
             }
 
             return isConnected;
