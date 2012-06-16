@@ -4,13 +4,13 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using BookSleeve;
 using Jabbot.Core.Jabbr;
 using Jabbot.Core.Sprockets;
 using Le;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using ServiceStack.Redis;
 
 namespace Jabbot.Console
 {
@@ -23,7 +23,6 @@ namespace Jabbot.Console
         private static string Version { get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); } }
         private static Logger Logger { get { return LogManager.GetCurrentClassLogger(); } }
         private static IJabbrClient JabbRClient { get; set; }
-        private static IRedisClient RedisClient { get; set; }
         private static Timer AliveTimer { get; set; }
         private static bool ShouldExit { get; set; }
 
@@ -76,7 +75,6 @@ namespace Jabbot.Console
         {
             InitializeLogger();
             Logger.Info("Jabbot Console Starting");
-            InitializeRedisClient();
             InitializeJabbRClient();
             InitializeAlivePingCronJob();
             Logger.Info("Jabbot Console Started");
@@ -130,18 +128,22 @@ namespace Jabbot.Console
             }
         }
 
-        private static void InitializeRedisClient()
+        private static RedisConnection GetRedisConnection()
         {
             try
             {
-                Logger.Info("Initializing Redis Client Started");
                 var uri = new Uri(ConfigurationManager.AppSettings["REDISTOGO_URL"]);
-                RedisClient = new RedisClient(uri);
-                Logger.Info("Initializing Redis Client Completed");
+                var host = uri.Host;
+                var port = uri.Port;
+                var password = uri.UserInfo.Split(':')[1];
+                var redisConnection = new RedisConnection(host, port, -1, password);
+                redisConnection.Open().Wait();
+                return redisConnection;
             }
             catch (Exception ex)
             {
-                Logger.ErrorException("An error occured initializing the RedisClient.", ex);
+                Logger.ErrorException("An error occured initializing a RedisConnection.", ex);
+                throw;
             }
         }
 
@@ -158,9 +160,9 @@ namespace Jabbot.Console
                         if (JabbRClient.IsConnected)
                         {
                             //Logger.Info(string.Format("Connection to {0} is established.", BotServer));
-                            if (RedisClient != null)
+                            using (var connection = GetRedisConnection())
                             {
-                                RedisClient.Set<string>(key, DateTimeOffset.UtcNow.ToString("u"));
+                                connection.Strings.Set(0, key, DateTimeOffset.UtcNow.ToString("u"));
                             }
                         }
                         else
@@ -183,7 +185,7 @@ namespace Jabbot.Console
                     Logger.ErrorException(String.Format("There was an error while checking the connection status.", key), ex);
                 }
             });
-            AliveTimer = new Timer(callback, null, new TimeSpan(0, 1, 0), new TimeSpan(0, 1, 0));
+            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 1, 0));
             Logger.Info("Initializing Alive Ping Cron Completed");
         }
 
@@ -193,7 +195,6 @@ namespace Jabbot.Console
             {
                 AliveTimer = null;
                 JabbRClient.Dispose();
-                RedisClient.Dispose();
                 Logger.Info("Exiting");
             }
             catch { }
@@ -279,25 +280,25 @@ namespace Jabbot.Console
                 {
                     try
                     {
-                        if (RedisClient != null)
+                        using (var connection = GetRedisConnection())
                         {
                             var utcNow = DateTimeOffset.UtcNow;
 
                             string allTimeHashId = "Jabbot:Statistics:Sprockets:Usage:AllTime";
-                            RedisClient.SetEntryInHashIfNotExists(allTimeHashId, sprocket, "0");
-                            RedisClient.IncrementValueInHash(allTimeHashId, sprocket, 1);
+                            connection.Hashes.SetIfNotExists(0, allTimeHashId, sprocket, "0");
+                            connection.Hashes.Increment(0, allTimeHashId, sprocket);
 
                             string yearHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", utcNow);
-                            RedisClient.SetEntryInHashIfNotExists(yearHashId, sprocket, "0");
-                            RedisClient.IncrementValueInHash(yearHashId, sprocket, 1);
+                            connection.Hashes.SetIfNotExists(0, yearHashId, sprocket, "0");
+                            connection.Hashes.Increment(0, yearHashId, sprocket);
 
                             string monthHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", utcNow);
-                            RedisClient.SetEntryInHashIfNotExists(monthHashId, sprocket, "0");
-                            RedisClient.IncrementValueInHash(monthHashId, sprocket, 1);
+                            connection.Hashes.SetIfNotExists(0, monthHashId, sprocket, "0");
+                            connection.Hashes.Increment(0, monthHashId, sprocket);
 
                             string dayHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", utcNow);
-                            RedisClient.SetEntryInHashIfNotExists(dayHashId, sprocket, "0");
-                            RedisClient.IncrementValueInHash(dayHashId, sprocket, 1);
+                            connection.Hashes.SetIfNotExists(0, dayHashId, sprocket, "0");
+                            connection.Hashes.Increment(0, dayHashId, sprocket);
                         }
                     }
                     catch (Exception ex)

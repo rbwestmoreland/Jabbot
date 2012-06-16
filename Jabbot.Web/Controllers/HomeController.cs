@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Web.Mvc;
+using BookSleeve;
 using Jabbot.Core.Sprockets;
 using Jabbot.Web.Models.Home;
 using Jabbot.Web.Models.Jabbot;
@@ -10,23 +11,23 @@ using Jabbot.Web.Models.Sprockets;
 using Jabbot.Web.Models.Statistics;
 using Jabbot.Web.Models.Status;
 using NLog;
-using ServiceStack.Redis;
 
 namespace Jabbot.Web.Controllers
 {
     public class HomeController : Controller
     {
         private static Logger Logger = LogManager.GetCurrentClassLogger();
-        private IRedisClient RedisClient { get; set; }
+        private RedisConnection RedisConnection { get; set; }
 
-        public HomeController(IRedisClient redisClient)
+        public HomeController(RedisConnection redisConnection)
         {
-            if (redisClient == null)
+            if (redisConnection == null)
             {
-                throw new ArgumentNullException("redisClient");
+                throw new ArgumentNullException("redisConnection");
             }
 
-            RedisClient = redisClient;
+            RedisConnection = redisConnection;
+            RedisConnection.Open().Wait();
         }
 
         public ActionResult Get()
@@ -66,10 +67,14 @@ namespace Jabbot.Web.Controllers
 
             try
             {
-                var allTimeHashValues = RedisClient.GetHashValues("Jabbot:Statistics:Sprockets:Usage:AllTime");
-                var yearlyHashValues = RedisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", DateTimeOffset.UtcNow));
-                var monthlyHashValues = RedisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", DateTimeOffset.UtcNow));
-                var dailyHashValues = RedisClient.GetHashValues(string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", DateTimeOffset.UtcNow));
+                var allTimeHashFields = RedisConnection.Hashes.GetKeys(0, "Jabbot:Statistics:Sprockets:Usage:AllTime").Result;
+                var allTimeHashValues = RedisConnection.Hashes.GetString(0, "Jabbot:Statistics:Sprockets:Usage:AllTime", allTimeHashFields).Result;
+                var yearlyHashFields = RedisConnection.Hashes.GetKeys(0, string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", DateTimeOffset.UtcNow)).Result;
+                var yearlyHashValues = yearlyHashFields.Length.Equals(0) ? new string[] { "0" } : RedisConnection.Hashes.GetString(0, string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", DateTimeOffset.UtcNow), yearlyHashFields).Result;
+                var monthlyHashFields = RedisConnection.Hashes.GetKeys(0, string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", DateTimeOffset.UtcNow)).Result;
+                var monthlyHashValues = monthlyHashFields.Length.Equals(0) ? new string[] { "0" } : RedisConnection.Hashes.GetString(0, string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", DateTimeOffset.UtcNow), monthlyHashFields).Result;
+                var dailyHashFields = RedisConnection.Hashes.GetKeys(0, string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", DateTimeOffset.UtcNow)).Result;
+                var dailyHashValues = dailyHashFields.Length.Equals(0) ? new string[] { "0" } : RedisConnection.Hashes.GetString(0, string.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", DateTimeOffset.UtcNow), dailyHashFields).Result;
 
                 var allTimeSum = (from hv in allTimeHashValues select Int64.Parse(hv)).Sum();
                 var yearlySum = (from hv in yearlyHashValues select Int64.Parse(hv)).Sum();
@@ -114,9 +119,10 @@ namespace Jabbot.Web.Controllers
             try
             {
                 var redisKey = "Jabbot:LastSeen";
-                if (RedisClient.ContainsKey(redisKey))
+                if (RedisConnection.Keys.Exists(0, redisKey).Result)
                 {
-                    var dateTimeOffsetString = RedisClient.Get<string>(redisKey);
+                    var dateTimeOffsetString = RedisConnection.Strings.GetString(0, redisKey).Result;
+                    dateTimeOffsetString = dateTimeOffsetString.Trim('\"');
                     var lastSeen = DateTimeOffset.Parse(dateTimeOffsetString);
                     viewModel = new StatusViewModel(lastSeen);
                 }
@@ -141,7 +147,7 @@ namespace Jabbot.Web.Controllers
                 {
                     if (disposing)
                     {
-                        RedisClient.Dispose();
+                        RedisConnection.Dispose();
                     }
                     this.Disposed = true;
                 }

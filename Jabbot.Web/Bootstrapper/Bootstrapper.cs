@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using Jabbot.Web.Bootstrapper.Tasks;
 using Jabbot.Web.Controllers;
-using ServiceStack.Redis;
+using BookSleeve;
 using TinyIoC;
 
 namespace Jabbot.Web.Bootstrapper
@@ -58,22 +58,28 @@ namespace Jabbot.Web.Bootstrapper
             container.Register<IController, HomeController>("Home").AsMultiInstance();
             container.Register<IController, ErrorController>("Error").AsMultiInstance();
             //Domain
-            container.Register<IRedisClient>(RedisClientConstructor);
+            container.Register<RedisConnection>(RedisClientConstructor);
             //Resource
             //
 
             return container;
         }
 
-        private static Func<TinyIoCContainer, NamedParameterOverloads, IRedisClient> RedisClientConstructor = (TinyIoCContainer c, NamedParameterOverloads p) =>
+        private static Func<TinyIoCContainer, NamedParameterOverloads, RedisConnection> RedisClientConstructor = (TinyIoCContainer c, NamedParameterOverloads p) =>
         {
             try
             {
-                return new RedisClient(new Uri(ConfigurationManager.AppSettings["REDISTOGO_URL"]));
+                var uri = new Uri(ConfigurationManager.AppSettings["REDISTOGO_URL"]);
+                var host = uri.Host;
+                var port = uri.Port;
+                var password = uri.UserInfo.Split(':')[1];
+                var redisConnection = new RedisConnection(host, port, -1, password);
+                return redisConnection;
             }
             catch
             {
-                return new RedisClient();
+                //todo: Handle this
+                throw;
             }
         };
     }
