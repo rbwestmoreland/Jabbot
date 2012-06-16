@@ -162,7 +162,7 @@ namespace Jabbot.Console
                             //Logger.Info(string.Format("Connection to {0} is established.", BotServer));
                             using (var connection = GetRedisConnection())
                             {
-                                connection.Strings.Set(0, key, DateTimeOffset.UtcNow.ToString("u"));
+                                connection.Strings.Set(0, key, DateTimeOffset.UtcNow.ToString("u")).Wait();
                             }
                         }
                         else
@@ -286,19 +286,21 @@ namespace Jabbot.Console
 
                             string allTimeHashId = "Jabbot:Statistics:Sprockets:Usage:AllTime";
                             connection.Hashes.SetIfNotExists(0, allTimeHashId, sprocket, "0");
-                            connection.Hashes.Increment(0, allTimeHashId, sprocket);
+                            var allTimeHashTask = connection.Hashes.Increment(0, allTimeHashId, sprocket);
 
                             string yearHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyy}", utcNow);
                             connection.Hashes.SetIfNotExists(0, yearHashId, sprocket, "0");
-                            connection.Hashes.Increment(0, yearHashId, sprocket);
+                            var yearHashTask = connection.Hashes.Increment(0, yearHashId, sprocket);
 
                             string monthHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMM}", utcNow);
                             connection.Hashes.SetIfNotExists(0, monthHashId, sprocket, "0");
-                            connection.Hashes.Increment(0, monthHashId, sprocket);
+                            var monthHashTask = connection.Hashes.Increment(0, monthHashId, sprocket);
 
                             string dayHashId = String.Format("Jabbot:Statistics:Sprockets:Usage:{0:yyyyMMdd}", utcNow);
                             connection.Hashes.SetIfNotExists(0, dayHashId, sprocket, "0");
-                            connection.Hashes.Increment(0, dayHashId, sprocket);
+                            var dayHashTask = connection.Hashes.Increment(0, dayHashId, sprocket);
+
+                            connection.WaitAll(allTimeHashTask, yearHashTask, monthHashTask, dayHashTask);
                         }
                     }
                     catch (Exception ex)
