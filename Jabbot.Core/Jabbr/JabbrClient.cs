@@ -320,11 +320,6 @@ namespace Jabbot.Core.Jabbr
         {
             var isConnected = false;
 
-            if (!Connection.IsActive)
-            {
-                throw new InvalidOperationException("JabbrClient has not yet been initialized.");
-            }
-
             try
             {
                 if (Connection.IsActive)
