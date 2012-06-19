@@ -185,7 +185,7 @@ namespace Jabbot.Console
                     Logger.ErrorException(String.Format("There was an error while checking the connection status.", key), ex);
                 }
             });
-            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 1, 0));
+            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 5, 0));
             Logger.Info("Initializing Alive Ping Cron Completed");
         }
 

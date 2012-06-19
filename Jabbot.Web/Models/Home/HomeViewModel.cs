@@ -21,7 +21,7 @@ namespace Jabbot.Web.Models.Home
 
         public bool IsOnline()
         {
-            if (DateTimeOffset.UtcNow.Subtract(Status.LastSeen) < new TimeSpan(0, 2, 0))
+            if (DateTimeOffset.UtcNow.Subtract(Status.LastSeen) < new TimeSpan(0, 5, 0))
             {
                 return true;
             }
