@@ -147,6 +147,8 @@ namespace Jabbot.Core.Jabbr
                 {
                     Send(String.Format("/gravatar {0}", gravatarEmail));
                 }
+
+                success = true;
             }
             catch (AggregateException aex)
             {
