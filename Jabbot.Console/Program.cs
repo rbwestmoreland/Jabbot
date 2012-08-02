@@ -118,8 +118,22 @@ namespace Jabbot.Console
                 JabbRClient = new JabbrClient(BotServer);
                 JabbRClient.OnReceivePrivateMessage += ProcessPrivateMessage;
                 JabbRClient.OnReceiveRoomMessage += ProcessRoomMessage;
-                JabbRClient.Connect();
-                JabbRClient.Login(BotName, BotPassword, BotGravatarEmail);
+                if (JabbRClient.Connect()) 
+                { 
+                    Logger.Info(string.Format("Connection to {0} was established.", BotServer)); 
+                }
+                else 
+                { 
+                    Logger.Info(string.Format("Connection to {0} was not established.", BotServer)); 
+                }
+                if (JabbRClient.Login(BotName, BotPassword, BotGravatarEmail)) 
+                { 
+                    Logger.Info(string.Format("Login to {0} was successful.", BotServer)); 
+                }
+                else 
+                { 
+                    Logger.Info(string.Format("Login to {0} was not successful.", BotServer)); 
+                }
                 Logger.Info("Initializing JabbR Client Completed");
             }
             catch (Exception ex)
@@ -169,14 +183,7 @@ namespace Jabbot.Console
                         {
                             Logger.Info(string.Format("Connection to {0} is broken.", BotServer));
                             Logger.Info(string.Format("Connection to {0} is being re-established...", BotServer));
-                            if (JabbRClient.Connect() && JabbRClient.Login(BotName, BotPassword, BotGravatarEmail))
-                            {
-                                Logger.Info(string.Format("Connection to {0} was re-established.", BotServer));
-                            }
-                            else
-                            {
-                                Logger.Error(string.Format("Connection to {0} was not re-established.", BotServer));
-                            }
+                            InitializeJabbRClient();
                         }
                     }
                 }
