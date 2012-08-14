@@ -45,6 +45,7 @@ namespace Jabbot.Console
             finally
             {
                 Shutdown();
+                Logger.Info("Exiting");
             }
 
             return -1;
@@ -67,17 +68,15 @@ namespace Jabbot.Console
 
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            Logger.ErrorException("An unobserved task exception occurred.", e.Exception);
+            Logger.ErrorException("An unobserved task exception occurred.", e.Exception.GetBaseException());
             e.SetObserved();
         }
 
         private static void Initialize()
         {
             InitializeLogger();
-            Logger.Info("Jabbot Console Starting");
             InitializeJabbRClient();
             InitializeAlivePingCronJob();
-            Logger.Info("Jabbot Console Started");
         }
 
         private static void InitializeLogger()
@@ -114,32 +113,76 @@ namespace Jabbot.Console
         {
             try
             {
-                Logger.Info("Initializing JabbR Client Started");
+                Logger.Info("Initializing JabbR client started");
                 JabbRClient = new JabbrClient(BotServer);
                 JabbRClient.OnReceivePrivateMessage += ProcessPrivateMessage;
                 JabbRClient.OnReceiveRoomMessage += ProcessRoomMessage;
                 if (JabbRClient.Connect()) 
                 { 
-                    Logger.Info(string.Format("Connection to {0} was established.", BotServer)); 
+                    Logger.Info(string.Format("Connection to '{0}' established.", BotServer));
+                    
+                    if (JabbRClient.Login(BotName, BotPassword, BotGravatarEmail))
+                    {
+                        Logger.Info(string.Format("Login to '{0}' successful.", BotServer));
+                    }
+                    else
+                    {
+                        Logger.Info(string.Format("Login to '{0}' not successful.", BotServer));
+                    }
                 }
                 else 
                 { 
-                    Logger.Info(string.Format("Connection to {0} was not established.", BotServer)); 
+                    Logger.Info(string.Format("Connection to '{0}' not established.", BotServer)); 
                 }
-                if (JabbRClient.Login(BotName, BotPassword, BotGravatarEmail)) 
-                { 
-                    Logger.Info(string.Format("Login to {0} was successful.", BotServer)); 
-                }
-                else 
-                { 
-                    Logger.Info(string.Format("Login to {0} was not successful.", BotServer)); 
-                }
-                Logger.Info("Initializing JabbR Client Completed");
+                Logger.Info("Initializing JabbR client completed");
             }
             catch (Exception ex)
             {
                 Logger.ErrorException("An exception occurred while initializing JabbR client.", ex);
             }
+        }
+
+        private static void InitializeAlivePingCronJob()
+        {
+            Logger.Info("Initializing Alive Ping Cron Started");
+            var callback = new TimerCallback((object o) =>
+            {
+                try
+                {
+                    if (JabbRClient != null)
+                    {
+                        if (JabbRClient.IsConnected)
+                        {
+                            using (var connection = GetRedisConnection())
+                            {
+                                connection.Strings.Set(0, "Jabbot:LastSeen", DateTimeOffset.UtcNow.ToString("u")).Wait();
+                            }
+                        }
+                        else
+                        {
+                            Logger.Info(string.Format("Connection to '{0}' is broken.", BotServer));
+                            Logger.Info(string.Format("Connection to '{0}' is being re-established...", BotServer));
+                            InitializeJabbRClient();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.ErrorException("There was an error while checking the connection status.", ex);
+                }
+            });
+            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 5, 0));
+            Logger.Info("Initializing Alive Ping Cron Completed");
+        }
+
+        private static void Shutdown()
+        {
+            try
+            {
+                AliveTimer.Dispose();
+                JabbRClient.Dispose();
+            }
+            catch { }
         }
 
         private static RedisConnection GetRedisConnection()
@@ -161,52 +204,6 @@ namespace Jabbot.Console
             }
         }
 
-        private static void InitializeAlivePingCronJob()
-        {
-            Logger.Info("Initializing Alive Ping Cron Started");
-            var callback = new TimerCallback((object o) =>
-            {
-                const string key = "Jabbot:LastSeen";
-                try
-                {
-                    if (JabbRClient != null)
-                    {
-                        if (JabbRClient.IsConnected)
-                        {
-                            //Logger.Info(string.Format("Connection to {0} is established.", BotServer));
-                            using (var connection = GetRedisConnection())
-                            {
-                                connection.Strings.Set(0, key, DateTimeOffset.UtcNow.ToString("u")).Wait();
-                            }
-                        }
-                        else
-                        {
-                            Logger.Info(string.Format("Connection to {0} is broken.", BotServer));
-                            Logger.Info(string.Format("Connection to {0} is being re-established...", BotServer));
-                            InitializeJabbRClient();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.ErrorException(String.Format("There was an error while checking the connection status.", key), ex);
-                }
-            });
-            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 5, 0));
-            Logger.Info("Initializing Alive Ping Cron Completed");
-        }
-
-        private static void Shutdown()
-        {
-            try
-            {
-                AliveTimer = null;
-                JabbRClient.Dispose();
-                Logger.Info("Exiting");
-            }
-            catch { }
-        }
-
         private static void ProcessPrivateMessage(string from, string to, string content)
         {
             Task.Factory.StartNew(() =>
@@ -225,7 +222,7 @@ namespace Jabbot.Console
                     {
                         if (sprocket.CanHandle(privateMessage))
                         {
-                            Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
+                            Logger.Info(string.Format("Message received from: '{0}' > '{1}'", from, content));
                             IncrementSprocketUsage(sprocket.Name);
                             sprocket.Handle(privateMessage, JabbRClient);
                             handled = true;
@@ -266,7 +263,7 @@ namespace Jabbot.Console
                     {
                         if (sprocket.CanHandle(roomMessage))
                         {
-                            Logger.Info(string.Format("Message received from: {0} > {1}", from, content));
+                            Logger.Info(string.Format("Message received from: '{0}' > '{1}'", from, content));
                             IncrementSprocketUsage(sprocket.Name);
                             sprocket.Handle(roomMessage, JabbRClient);
                             break;
