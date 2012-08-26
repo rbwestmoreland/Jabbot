@@ -23,7 +23,8 @@ namespace Jabbot.Console
         private static string Version { get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); } }
         private static Logger Logger { get { return LogManager.GetCurrentClassLogger(); } }
         private static IJabbrClient JabbRClient { get; set; }
-        private static Timer AliveTimer { get; set; }
+        private static Timer HeartbeatTimer { get; set; }
+        private static Timer DefibrillatorTimer { get; set; }
         private static bool ShouldExit { get; set; }
 
         static int Main(string[] args)
@@ -44,7 +45,6 @@ namespace Jabbot.Console
             }
             finally
             {
-                Shutdown();
                 Logger.Info("Exiting");
             }
 
@@ -76,7 +76,8 @@ namespace Jabbot.Console
         {
             InitializeLogger();
             InitializeJabbRClient();
-            InitializeAlivePingCronJob();
+            InitializeHeartbeatTimer();
+            InitializeDefibrillatorTimer();
         }
 
         private static void InitializeLogger()
@@ -142,27 +143,18 @@ namespace Jabbot.Console
             }
         }
 
-        private static void InitializeAlivePingCronJob()
+        private static void InitializeHeartbeatTimer()
         {
-            Logger.Info("Initializing Alive Ping Cron Started");
+            Logger.Info("Initializing Heartbeat Timer Started");
             var callback = new TimerCallback((object o) =>
             {
                 try
                 {
-                    if (JabbRClient != null)
+                    if (JabbRClient != null && JabbRClient.IsConnected)
                     {
-                        if (JabbRClient.IsConnected)
+                        using (var connection = GetRedisConnection())
                         {
-                            using (var connection = GetRedisConnection())
-                            {
-                                connection.Strings.Set(0, "Jabbot:LastSeen", DateTimeOffset.UtcNow.ToString("u")).Wait();
-                            }
-                        }
-                        else
-                        {
-                            Logger.Info(string.Format("Connection to '{0}' is broken.", BotServer));
-                            Logger.Info(string.Format("Connection to '{0}' is being re-established...", BotServer));
-                            InitializeJabbRClient();
+                            connection.Strings.Set(0, "Jabbot:LastSeen", DateTimeOffset.UtcNow.ToString("u")).Wait();
                         }
                     }
                 }
@@ -171,18 +163,20 @@ namespace Jabbot.Console
                     Logger.ErrorException("There was an error while checking the connection status.", ex);
                 }
             });
-            AliveTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 5, 0));
-            Logger.Info("Initializing Alive Ping Cron Completed");
+            HeartbeatTimer = new Timer(callback, null, new TimeSpan(0, 0, 10), new TimeSpan(0, 5, 0));
+            Logger.Info("Initializing Heartbeat Timer Completed");
         }
 
-        private static void Shutdown()
+        private static void InitializeDefibrillatorTimer()
         {
-            try
+            Logger.Info("Initializing Defibrillator Timer Started");
+            var callback = new TimerCallback((object o) =>
             {
-                AliveTimer.Dispose();
-                JabbRClient.Dispose();
-            }
-            catch { }
+                ShouldExit = true;
+            });
+            var dueTime = (long)new TimeSpan(1, 0, 0).TotalMilliseconds;
+            HeartbeatTimer = new Timer(callback, null, dueTime, Timeout.Infinite);
+            Logger.Info("Initializing Defibrillator Timer Completed");
         }
 
         private static RedisConnection GetRedisConnection()
