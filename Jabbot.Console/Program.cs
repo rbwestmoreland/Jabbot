@@ -175,7 +175,7 @@ namespace Jabbot.Console
                 ShouldExit = true;
             });
             var dueTime = (long)new TimeSpan(1, 0, 0).TotalMilliseconds;
-            HeartbeatTimer = new Timer(callback, null, dueTime, Timeout.Infinite);
+            DefibrillatorTimer = new Timer(callback, null, dueTime, Timeout.Infinite);
             Logger.Info("Initializing Defibrillator Timer Completed");
         }
 
