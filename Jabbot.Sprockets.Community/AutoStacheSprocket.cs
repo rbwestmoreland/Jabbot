@@ -80,37 +80,15 @@ namespace Jabbot.Sprockets.Community
                 {
                     var match = RoomMessagePatterns.First(p => p.Match(message.Content).Success).Match(message.Content);
                     var imageUrl = match.Groups[2].Value;
-
-                    if (CanAccessorize(imageUrl))
-                    {
-                        var stachedImageUrl = String.Format("http://faceup.me/img.jpg?overlay={0}&src={1}", Accessories.RandomElement(), Uri.EscapeDataString(imageUrl));
-                        jabbrClient.SayToRoom(message.Room, stachedImageUrl);
-                    }
+                    var stachedImageUrl = String.Format("http://faceup.me/img.jpg?overlay={0}&src={1}", Accessories.RandomElement(), Uri.EscapeDataString(imageUrl));
+                    
+                    jabbrClient.SayToRoom(message.Room, stachedImageUrl);
                 }).ContinueWith(task =>
                 {
                     var result = task.Exception;
                 },
                 TaskContinuationOptions.OnlyOnFaulted);
             }
-        }
-
-        protected virtual bool CanAccessorize(string imageUrl)
-        {
-            var canStache = false;
-
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-us"));
-            client.DefaultRequestHeaders.AcceptCharset.Add(new StringWithQualityHeaderValue("utf-8"));
-            var result = client.GetAsync(String.Format("http://stacheable.herokuapp.com?src={0}", Uri.EscapeDataString(imageUrl))).Result;
-
-            if (result.IsSuccessStatusCode)
-            {
-                var content = result.Content.ReadAsStringAsync().Result;
-                dynamic json = JsonConvert.DeserializeObject(content);
-                canStache = json.count.Value > 0;
-            }
-
-            return canStache;
         }
     }
 }
