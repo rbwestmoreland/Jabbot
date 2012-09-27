@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Web
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jabbot.Core", "Jabbot.Core\Jabbot.Core.csproj", "{E27309EC-EAC3-4AC6-82C9-DDCAA91FE6FA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jabbot.Console", "Jabbot.Console\Jabbot.Console.csproj", "{978ED233-C8AD-4953-B983-214743CF6D05}"
