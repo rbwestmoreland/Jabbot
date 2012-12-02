@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using NLog;
-using SignalR.Client.Hubs;
+using Microsoft.AspNet.SignalR.Client.Hubs;
+using Microsoft.AspNet.SignalR.Client;
 
 namespace Jabbot.Core.Jabbr
 {
@@ -25,7 +26,7 @@ namespace Jabbot.Core.Jabbr
 
             Rooms = new List<string>();
             Connection = new HubConnection(url);
-            Proxy = Connection.CreateProxy("chat");
+            Proxy = Connection.CreateHubProxy("chat");
             SubscribeToEvents();
         }
 
@@ -33,7 +34,7 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -60,7 +61,7 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -92,7 +93,7 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -124,7 +125,7 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -171,7 +172,7 @@ namespace Jabbot.Core.Jabbr
 
         public virtual void Logout()
         {
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -215,7 +216,7 @@ namespace Jabbot.Core.Jabbr
         {
             try
             {
-                if (Connection.IsActive)
+                if (Connection.State == ConnectionState.Connected)
                 {
                     Connection.Stop();
                 }
@@ -230,7 +231,7 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -262,7 +263,7 @@ namespace Jabbot.Core.Jabbr
         {
             var success = false;
 
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -297,7 +298,7 @@ namespace Jabbot.Core.Jabbr
 
         public virtual void Send(string command)
         {
-            if (!Connection.IsActive)
+            if (Connection.State != ConnectionState.Connected)
             {
                 throw new InvalidOperationException("JabbrClient has not yet been initialized.");
             }
@@ -324,7 +325,7 @@ namespace Jabbot.Core.Jabbr
 
             try
             {
-                if (Connection.IsActive)
+                if (Connection.State == ConnectionState.Connected)
                 {
                     var outOfSync = Proxy.Invoke<bool>("CheckStatus").Result;
                     var userInfo = Proxy.Invoke<dynamic>("GetUserInfo").Result;

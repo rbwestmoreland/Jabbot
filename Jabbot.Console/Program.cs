@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using BookSleeve;
 using Jabbot.Core.Jabbr;
 using Jabbot.Core.Sprockets;
-using Le;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -96,7 +95,7 @@ namespace Jabbot.Console
 
             if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(location))
             {
-                LeTarget logEntiresTarget = new LeTarget();
+                var logEntiresTarget = new LogentriesTarget();
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;

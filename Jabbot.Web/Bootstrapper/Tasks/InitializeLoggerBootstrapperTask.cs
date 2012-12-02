@@ -1,5 +1,4 @@
 ﻿using System.Configuration;
-using Le;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
@@ -17,7 +16,7 @@ namespace Jabbot.Web.Bootstrapper.Tasks
             {
                 var loggingConfiguration = new LoggingConfiguration();
 
-                var logEntiresTarget = new LeTarget();
+                var logEntiresTarget = new LogentriesTarget();
                 logEntiresTarget.Key = key;
                 logEntiresTarget.Location = location;
                 logEntiresTarget.Debug = true;
